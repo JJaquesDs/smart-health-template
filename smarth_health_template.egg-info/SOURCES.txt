@@ -1,0 +1,9 @@
+LICENSE
+README.md
+setup.py
+smarth_health_template.egg-info/PKG-INFO
+smarth_health_template.egg-info/SOURCES.txt
+smarth_health_template.egg-info/dependency_links.txt
+smarth_health_template.egg-info/entry_points.txt
+smarth_health_template.egg-info/requires.txt
+smarth_health_template.egg-info/top_level.txt
