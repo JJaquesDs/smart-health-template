@@ -6,6 +6,7 @@ from sqlalchemy.orm import relationship
 
 class Paciente(Base):
     """ Modelo Pacientes"""
+
     __tablename__ = "pacientes"
 
     paciente_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
