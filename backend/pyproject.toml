@@ -23,7 +23,7 @@ dependencies = [
 
     # Resiliência / Observabilidade
     "tenacity>=8.2.3,<9.0.0",
-    "sentry-sdk[fastapi]>=1.40.6,<2.0.0",
+    "sentry-sdk[fastapi]>=1.40.6,<3.0.0",
 
     # HTTP / Integrações
     "httpx>=0.25.1,<1.0.0",
