@@ -17,7 +17,7 @@ class ExameImagem(Base):
     link_imagem = Column(String(45))
 
     medicamento = relationship("Medicamento", back_populates="exame_imagem")            #  Para médicos se relacionarem com exames de imagem
-    upload_imagem = relationship("UploadExameImagem")    #  Para a lógica de 'Uploads' se relacionar com exames de imagem
+    upload_imagem = relationship("UploadExameImagem", back_populates="exames_imagem")    #  Para a lógica de 'Uploads' se relacionar com exames de imagem
 
 
 class UploadExameImagem(Base):
