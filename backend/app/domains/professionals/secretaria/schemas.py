@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 
-from backend.app.users.schemas import UserPublic
+from app.domains.users.schemas import UserPublic
 
 
 class SecretariaBase(BaseModel):
