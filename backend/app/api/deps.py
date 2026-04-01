@@ -59,4 +59,15 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
 def exigir_role(roles: list[str]):
-    pass
+    """ Função que exige um papel para permissão de usuários """
+
+    def checar(usuario_atual: CurrentUser):
+        """ Função que checa se o papel está presente em papéis"""
+        if usuario_atual.role not in roles:
+            raise HTTPException(
+                status_code=403,
+                detail="Usuário sem permissão"
+            )
+        return usuario_atual
+    return checar
+

@@ -8,6 +8,7 @@ class User(BaseModel):
     senha: str
     nome: str
     telefone: str
+    role: str
 
 
 class UserPublic(BaseModel):
@@ -17,6 +18,7 @@ class UserPublic(BaseModel):
     nome: str
     telefone: str
     email: EmailStr
+    role: str
 
     class Config:
         from_attributes = True  # Serialização dos dados, dizendo que virão de um orm SQLAlchemy
