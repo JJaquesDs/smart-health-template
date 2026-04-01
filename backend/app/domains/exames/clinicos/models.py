@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 
 from datetime import datetime
 
-# from app.database.connection import Base
+from app.core.connection import Base
 
 
 class ExamesClinicos(Base):

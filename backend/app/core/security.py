@@ -1,3 +1,5 @@
+from fastapi import Depends, HTTPException, status
+
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -25,3 +27,4 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
+

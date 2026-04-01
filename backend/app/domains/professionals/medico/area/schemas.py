@@ -14,7 +14,7 @@ class AreaPublic(AreaBase):
     area_id: int
 
     class Config:
-        orm_mode = True  # Serialização dos dados, dizendo que virão de um orm SQLAlchemy
+        from_attributes = True  # Serialização dos dados, dizendo que virão de um orm SQLAlchemy
 
 
 class AreaCreate(AreaBase):

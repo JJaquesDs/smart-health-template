@@ -28,7 +28,7 @@ class SecretariaPublic(BaseModel):
     class Config:
         """ Classe de configuração do modelo publico, para mais atributos consultar a documentação"""
 
-        orm_mode = True  # Serialização dos dados, dizendo que virão de um orm SQLAlchemy
+        from_attributes = True  # Serialização dos dados, dizendo que virão de um orm SQLAlchemy
 
 
 class SecretariaUpdate(BaseModel):
@@ -47,4 +47,4 @@ class SecretariaGet(BaseModel):
     usuario_id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True

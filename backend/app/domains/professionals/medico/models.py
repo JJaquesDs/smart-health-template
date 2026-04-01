@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
-# from app.database.connection import Base
+
+from app.core.connection import Base
 
 
 class Medico(Base):
@@ -15,8 +16,8 @@ class Medico(Base):
     crm_numero = Column(String(45), nullable=False, unique=True)
     crm_UF = Column(String(45), nullable=False)
 
-    usuario_id = Column(Integer, ForeignKey("usuarios.usuario_id"), nullable=False)
-    area_id = Column(Integer, ForeignKey("areas.area_id"), nullable=False)
+    usuario_id = Column(Integer, ForeignKey("usuarios.usuario_id", ondelete="CASCADE"), nullable=False)
+    area_id = Column(Integer, ForeignKey("areas.area_id", ondelete="CASCADE"), nullable=False)
 
     usuario = relationship("Usuario", back_populates="medicos")    # criando uma relação bidirecional que permite acessar o usuario de um médico e todos os médicos de um usuario
     area = relationship("Area", back_populates="medicos")          # relação para que médico possua uma área

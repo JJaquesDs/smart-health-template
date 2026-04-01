@@ -2,7 +2,7 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional
 
 
-class Pacient(BaseModel):
+class PacienteBase(BaseModel):
     """ Classe base Paciente """
 
     nome: str
@@ -31,11 +31,16 @@ class PacientPublic(BaseModel):
     plano_saude: bool
 
     class Config:
-        orm_mode = True   # Serialização dos dados, dizendo que virão de um orm SQLAlchemy
+        from_attributes = True   # Serialização dos dados, dizendo que virão de um orm SQLAlchemy
 
 
 class PacientOut(PacientPublic):
     """ Classe Pacient Out ???? """
+    pass
+
+
+class PacienteCreate(PacienteBase):
+    """ Schema nao adiciona nem remove campos ao Modelo Base (serve apenas para separar das demais classes: 'Base' / ‘Update’ / 'Get')"""
     pass
 
 
@@ -51,3 +56,6 @@ class PacientUpdate(BaseModel):
     telefone: Optional[str]
     email: Optional[EmailStr]
     plano_saude: Optional[bool]
+
+    class Config:
+        from_attributes = True

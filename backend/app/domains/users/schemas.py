@@ -19,7 +19,7 @@ class UserPublic(BaseModel):
     email: EmailStr
 
     class Config:
-        orm_mode = True  # Serialização dos dados, dizendo que virão de um orm SQLAlchemy
+        from_attributes = True  # Serialização dos dados, dizendo que virão de um orm SQLAlchemy
 
 
 class UserUpdate(BaseModel):

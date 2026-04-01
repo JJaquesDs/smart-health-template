@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Boolean
 from sqlalchemy.orm import relationship
 
-#from app.database.connection import Base
+from app.core.connection import Base
 
 
 class Paciente(Base):

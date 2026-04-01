@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 
 from datetime import datetime
 
-#from app.database.connection import Base
+from app.core.connection import Base
 
 
 class ExameImagem(Base):
@@ -29,7 +29,7 @@ class UploadExameImagem(Base):
     titulo = Column(String(45), nullable=False)
     caminho_upload = Column(String(255), nullable=False)
 
-    exame_imagem_id = Column(Integer, ForeignKey('exames_imagem.exame_id'))  # Relacionando a imagem de upload a tabela de exames de imagem com ForeignKey
+    exame_imagem_id = Column(Integer, ForeignKey('exames_imagem.exame_id', ondelete="CASCADE"))  # Relacionando a imagem de upload a tabela de exames de imagem com ForeignKey
 
 
 class ResultadoExameImagemIa(Base):
@@ -41,7 +41,7 @@ class ResultadoExameImagemIa(Base):
     risco = Column(Float, nullable=False)
     data_analise = Column(DateTime, default=datetime.utcnow)
 
-    exame_imagem_id = Column(Integer, ForeignKey('exames_imagem.exame_id'))             #  Relacionando o resultado da análise do exame de imagem com a imagem
+    exame_imagem_id = Column(Integer, ForeignKey('exames_imagem.exame_id', ondelete="CASCADE"))             #  Relacionando o resultado da análise do exame de imagem com a imagem
     exame_imagem = relationship("ExameImagem", back_populates="resultados")    #  Relacionando Resultados com exames de imagem
 
     #  Ela ainda n tem schemas ou classe pública, pois não possui dados sensíveis como senhas

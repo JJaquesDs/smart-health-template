@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
-# from app.database.connection import Base
+
+from app.core.connection import Base
 
 
 class Area(Base):
