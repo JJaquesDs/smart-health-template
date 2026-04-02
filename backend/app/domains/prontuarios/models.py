@@ -17,7 +17,7 @@ class Prontuario(Base):
     doenca_prontuarios = relationship("DoencaProntuario", back_populates="prontuario")
     habitos_vida = relationship("HabitosVida", back_populates="prontuario", uselist=False)
     historico = relationship("Historico", back_populates="prontuario", uselist=False)
-    upload_prontuario = relationship("UploadProntuario", back_populates="prontuario", uselist=False)
+    # upload_prontuario = relationship("UploadProntuario", back_populates="prontuario", uselist=False)
 
 
 class Historico(Base):

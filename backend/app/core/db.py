@@ -1,33 +1,37 @@
-from sqlmodel import Session, create_engine, select
+from sqlmodel import Session, create_engine
 
-from app import crud
 from app.core.config import settings
-from app.models import User, UserCreate
+from app.core.connection import Base
 
 engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 
 
-# make sure all SQLModel models are imported (app.models) before initializing DB
-# otherwise, SQLModel might fail to initialize relationships properly
-# for more details: https://github.com/fastapi/full-stack-fastapi-template/issues/28
+def get_session():
+    """ Função para usar em dependências FastAPI """
+
+    with Session(engine) as session:
+        yield session
 
 
 def init_db(session: Session) -> None:
-    # Tables should be created with Alembic migrations
-    # But if you don't want to use migrations, create
-    # the tables un-commenting the next lines
-    # from sqlmodel import SQLModel
+    """ Inicializaa dados inicias (como primeiro admin)"""
 
-    # This works because the models are already imported and registered from app.models
-    # SQLModel.metadata.create_all(engine)
+    from app.domains.users import service as user_service
+    from app.domains.users.models import Usuario
 
-    user = session.exec(
-        select(User).where(User.email == settings.FIRST_SUPERUSER)
-    ).first()
-    if not user:
-        user_in = UserCreate(
-            email=settings.FIRST_SUPERUSER,
-            password=settings.FIRST_SUPERUSER_PASSWORD,
-            is_superuser=True,
-        )
-        user = crud.create_user(session=session, user_create=user_in)
+    with Session(engine) as session:
+
+        user = session.query(Usuario).filter_by(email=settings.FIRST_SUPERUSER).first()
+
+        if not user:
+            user_service.create_user(
+                session=session,
+                email=settings.FIRST_SUPERUSER,
+                senha=settings.FIRST_SUPERUSER_PASSWORD,
+                nome="Super Usuario",
+                telefone="000000000",  ## so pra n ter risco de botar um aleatorio kk
+                role="admin"
+            )
+
+
+

@@ -18,6 +18,7 @@ class ExameImagem(Base):
 
     medicamento = relationship("Medicamento", back_populates="exame_imagem")            #  Para médicos se relacionarem com exames de imagem
     upload_imagem = relationship("UploadExameImagem", back_populates="exames_imagem")    #  Para a lógica de 'Uploads' se relacionar com exames de imagem
+    resultados = relationship("ResultadoExameImagemIa", back_populates="exame_imagem")
 
 
 class UploadExameImagem(Base):
@@ -30,6 +31,7 @@ class UploadExameImagem(Base):
     caminho_upload = Column(String(255), nullable=False)
 
     exame_imagem_id = Column(Integer, ForeignKey('exames_imagem.exame_id', ondelete="CASCADE"))  # Relacionando a imagem de upload a tabela de exames de imagem com ForeignKey
+    exames_imagem = relationship("ExameImagem", back_populates="upload_imagem")
 
 
 class ResultadoExameImagemIa(Base):

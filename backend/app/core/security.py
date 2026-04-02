@@ -1,30 +1,40 @@
-from fastapi import Depends, HTTPException, status
+import bcrypt
 
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import jwt
-from passlib.context import CryptContext
 
 from app.core.config import settings
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 
 ALGORITHM = "HS256"
 
 
-def create_access_token(subject: str | Any, expires_delta: timedelta) -> str:
-    expire = datetime.now(timezone.utc) + expires_delta
-    to_encode = {"exp": expire, "sub": str(subject)}
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+def create_access_token(user):
+    """ Função que cria um ‘token’ de acesso para 'usuários """
+
+    expiracao = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+
+    payload = {
+        "sub": str(user.usuario_id),
+        "role": user.role,
+        "exp": expiracao
+    }
+
+    token = jwt.encode(payload, settings.SECRET_KEY, algorithm=ALGORITHM)  # Encode do token com a SecretKey e o algoritmo de encode
+    return token
 
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+def verify_password(senha_simples: str, senha_hashed: str) -> bool:
+    """ Função que verifica as senhas"""
+
+    return bcrypt.checkpw(senha_simples.encode("utf-8"), senha_hashed.encode("utf-8"))  # Enconding de senhas em bytes para utf-8
 
 
-def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+def get_password_hash(senha: str) -> str:
+    """ Função que pega a senha e faz hash (usando bcrypt) """
+
+    hashed = bcrypt.hashpw(senha.encode("utf-8"), bcrypt.gensalt())  ## transformando em bytes para bcrypt trabalhar
+
+    return hashed.decode("utf-8")  ## Devolvendo como utf-8
 

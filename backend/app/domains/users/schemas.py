@@ -24,6 +24,15 @@ class UserPublic(BaseModel):
         from_attributes = True  # Serialização dos dados, dizendo que virão de um orm SQLAlchemy
 
 
+class UserCreate(BaseModel):
+    """ Schema para criacao de novo usuario"""
+    email: EmailStr
+    senha: str
+    nome: str
+    telefone: str
+    role: str
+
+
 class UserUpdate(BaseModel):
     """ Classe de atualização de usuarios """
 
