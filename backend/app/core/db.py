@@ -14,19 +14,22 @@ def get_session():
 
 
 def init_db(session: Session) -> None:
-    """ Inicializaa dados inicias (como primeiro admin)"""
+    """ Inicializaa dados inicias com primeiro 'Superusuário' caso não houver """
 
     from app.domains.users import services as user_service
     from app.domains.users.models import Usuario
 
-    with Session(engine) as session:
+    super_user = session.query(Usuario).filter_by(email=settings.FIRST_SUPERUSER).first()  # Verificando se já temos um 'Superusuário'
 
-        user = session.query(Usuario).filter_by(email=settings.FIRST_SUPERUSER).first()
-
-        if not user:
-            user_service.create_user_service(session=session, nome="Super Usuario", telefone="000000000",
-                                             email=settings.FIRST_SUPERUSER, senha=settings.FIRST_SUPERUSER_PASSWORD,
-                                             role="admin")
+    if not super_user:
+        user_service.create_user_service(
+            session=session,
+            nome="Super Usuario",
+            telefone="000000000",
+            email=settings.FIRST_SUPERUSER,
+            senha=settings.FIRST_SUPERUSER_PASSWORD,
+            role="superuser"
+        )
 
 
 

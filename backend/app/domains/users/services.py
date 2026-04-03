@@ -1,7 +1,6 @@
 from fastapi import HTTPException
 
 from typing import List, Type
-
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
@@ -10,11 +9,12 @@ import jwt
 from app.domains.users.models import Usuario
 from app.domains.users.schemas import UserUpdate
 
-
 from app.core.config import settings
+
 from app.core.security import (
     get_password_hash, verify_password,
-    create_access_token
+    create_access_token,
+    ALGORITHM
 )
 
 from app.domains.users.repository import (
@@ -106,7 +106,7 @@ def get_current_user_service(session: Session, token: str) -> Usuario:
     )
 
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])  ## ALGORITHM vindo de security
         user_id: str | None = payload.get("sub")
 
         if user_id is None:
@@ -162,7 +162,7 @@ def update_user_service(session: Session, user_id: int, user_up: UserUpdate):
     return update_user_in_db(session, user)
 
 
-def delete_user_service(session: Session, user_id: int) -> None:
+def delete_user_service(session: Session,user_id: int) -> None:
     """ Service de deletar usuário """
 
     user = get_user_by_id(session, user_id)  ## Verificando se o Usuario existe no banco
@@ -171,6 +171,12 @@ def delete_user_service(session: Session, user_id: int) -> None:
         raise HTTPException(
             status_code=404,
             detail="Usuário não encontrado"
+        )
+
+    if user.role == "superuser":
+        raise HTTPException(
+            status_code=403,
+            detail="Somente um Super Usuário pode deletar outro Super Usuário"
         )
 
     return delete_user_in_db(session, user)

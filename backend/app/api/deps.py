@@ -12,8 +12,9 @@ from app.domains.users.services import get_current_user_service
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")   #muda aqui
 
 
-def get_current_user_dep(token: str = Depends(oauth2_scheme),
-                     session: Session = Depends(get_session)
+def get_current_user_dep(
+        token: str = Depends(oauth2_scheme),
+        session: Session = Depends(get_session)
 ):
     """ Função que verifica usuário por token e se existe """
 

@@ -30,7 +30,7 @@ def get_all_users_in_db(session: Session) -> list[Usuario]:  # Retorna uma lista
     """ Função que retorna todos os Usuarios"""
 
     resultado = session.execute(select(Usuario))
-    return resultado.scalar().all()
+    return resultado.scalars8u().all()
 
 
 def delete_user_in_db(session: Session, user: Usuario) -> None:

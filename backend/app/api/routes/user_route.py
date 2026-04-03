@@ -3,11 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from sqlalchemy.orm import Session
 
-from typing import List
-
 from app.api.deps import get_current_user_dep, exigir_role, get_session
-
-from app.core.security import get_password_hash, verify_password, create_access_token
 
 from app.domains.users.models import Usuario
 from app.domains.users.schemas import UserPublic, UserCreate, UserUpdate
@@ -55,7 +51,7 @@ def login(formulario: OAuth2PasswordRequestForm = Depends(), session: Session = 
 
 @router.get("/list-todos", response_model=list[UserPublic])
 def read_users(
-        user: Usuario = Depends(exigir_role(["admin"])),
+        user: Usuario = Depends(exigir_role(["admin", "superuser"])),
         session: Session = Depends(get_session)
 ):
     """ Rota de listar 'Usuarios' (somente admin)"""
@@ -68,7 +64,7 @@ def update_user(
         user_id: int,
         user_up: UserUpdate,
         session: Session = Depends(get_session),
-        user_atual: Usuario = Depends(exigir_role(["admin"]))
+        user_atual: Usuario = Depends(exigir_role(["admin", "superuser"]))
 ):
     """ Rota para atualizar Usuario (exige admin) """
 
@@ -79,15 +75,13 @@ def update_user(
 def delete_user(
         user_id: int,
         session: Session = Depends(get_session),
-        user_atual: Usuario = Depends(exigir_role(["admin"]))
+        user_atual: Usuario = Depends(exigir_role(["admin", "superuser"]))
 ):
     """ Rota para deletar usuário (exige admin)"""
 
     delete_user_service(session, user_id)
 
+    return {
+        "message": "Usuário deletado com sucesso"
+    }
 
-@router.get("/admin-area", response_model=UserPublic)
-def admin_area(user: Usuario = Depends(exigir_role(["admin"]))):
-    """ Rota protegida que exige papel admin """
-
-    return user
