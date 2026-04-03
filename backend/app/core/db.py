@@ -16,7 +16,7 @@ def get_session():
 def init_db(session: Session) -> None:
     """ Inicializaa dados inicias (como primeiro admin)"""
 
-    from app.domains.users import service as user_service
+    from app.domains.users import services as user_service
     from app.domains.users.models import Usuario
 
     with Session(engine) as session:
@@ -24,14 +24,9 @@ def init_db(session: Session) -> None:
         user = session.query(Usuario).filter_by(email=settings.FIRST_SUPERUSER).first()
 
         if not user:
-            user_service.create_user(
-                session=session,
-                email=settings.FIRST_SUPERUSER,
-                senha=settings.FIRST_SUPERUSER_PASSWORD,
-                nome="Super Usuario",
-                telefone="000000000",  ## so pra n ter risco de botar um aleatorio kk
-                role="admin"
-            )
+            user_service.create_user_service(session=session, nome="Super Usuario", telefone="000000000",
+                                             email=settings.FIRST_SUPERUSER, senha=settings.FIRST_SUPERUSER_PASSWORD,
+                                             role="admin")
 
 
 

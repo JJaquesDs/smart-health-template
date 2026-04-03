@@ -5,18 +5,26 @@ from sqlalchemy.orm import Session
 
 from typing import List
 
-from app.api.deps import get_current_user, exigir_role, get_session
+from app.api.deps import get_current_user_dep, exigir_role, get_session
 
 from app.core.security import get_password_hash, verify_password, create_access_token
 
 from app.domains.users.models import Usuario
 from app.domains.users.schemas import UserPublic, UserCreate, UserUpdate
 
+from app.domains.users.services import (
+    create_user_service,
+    login_service,
+    update_user_service,
+    delete_user_service,
+    get_all_users_service
+)
+
 router = APIRouter(prefix="/users", tags=["users"])
 
 
 @router.get("/eu", response_model=UserPublic)
-def read_usuario_atual(user: Usuario = Depends(get_current_user)):
+def read_usuario_atual(user: Usuario = Depends(get_current_user_dep)):
     """ Função read do usuario atual """
 
     return user
@@ -26,27 +34,15 @@ def read_usuario_atual(user: Usuario = Depends(get_current_user)):
 def create_user(user_novo: UserCreate, session: Session = Depends(get_session)):
     """ Rota para criar usuario """
 
-    usuario_existente = session.query(Usuario).filter_by(email=user_novo.email).first()
-
-    if usuario_existente:
-        raise HTTPException(
-            status_code=400,
-            detail="Email já cadastrado"
-        )
-
-
-#  criando usuário caso nao esteja cadastrado
-    user = Usuario(
-        email=user_novo.email,
-        senha=get_password_hash(user_novo.senha),
-        nome=user_novo.telefone,
+    user = create_user_service(
+        session=session,
+        nome=user_novo.nome,
         telefone=user_novo.telefone,
+        email=user_novo.email,
+        senha=user_novo.senha,
         role=user_novo.role
     )
 
-    session.add(user)
-    session.commit()
-    session.refresh(user)
     return user
 
 
@@ -54,56 +50,32 @@ def create_user(user_novo: UserCreate, session: Session = Depends(get_session)):
 def login(formulario: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(get_session)):
     """ Rota login com Formulário OAuth2Password """
 
-    user = session.query(Usuario).filter_by(email=formulario.username).first()
-
-    if not user or not verify_password(formulario.password, user.senha):
-        raise HTTPException(status_code=401, detail="Email ou senha incorretos")
-
-    access_token = create_access_token(user)
-
-    return {
-        "access_token": access_token,
-        "token_type": "bearer"
-    }
+    return login_service(session, formulario.username, formulario.password)    ## OAuth2PasswordRequestForm lê 'username' como email, entende-se como parâmetros 'email' e 'senha'
 
 
-@router.get("/list-todos", response_model=List[UserPublic])
+@router.get("/list-todos", response_model=list[UserPublic])
 def read_users(
         user: Usuario = Depends(exigir_role(["admin"])),
         session: Session = Depends(get_session)
 ):
-    """ Rota de listar 'usuários' (somente admin)"""
+    """ Rota de listar 'Usuarios' (somente admin)"""
 
-    return session.query(Usuario).all()
+    return get_all_users_service(session)
 
 
-@router.put("{user_id}", response_model=UserPublic)
+@router.put("/{user_id}", response_model=UserPublic)
 def update_user(
         user_id: int,
         user_up: UserUpdate,
         session: Session = Depends(get_session),
         user_atual: Usuario = Depends(exigir_role(["admin"]))
 ):
-    """ Rota para atualizar usuário (exige admin) """
+    """ Rota para atualizar Usuario (exige admin) """
 
-    user = session.query(Usuario).filter_by(usuario_id=user_id).first()
-
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuário não encontrado")
-
-    if user_up.senha:
-        user_up.senha = get_password_hash(user_up.senha)
-
-    for campo, valor in user_up.dict(exclude_unset=True).items():
-        setattr(user, campo, valor)
-
-    session.commit()
-    session.refresh(user)
-
-    return user
+    return update_user_service(session, user_id, user_up)
 
 
-@router.delete("{user_id}", status_code=204)
+@router.delete("/{user_id}", status_code=204)
 def delete_user(
         user_id: int,
         session: Session = Depends(get_session),
@@ -111,15 +83,7 @@ def delete_user(
 ):
     """ Rota para deletar usuário (exige admin)"""
 
-    user = session.query(Usuario).filter_by(usuario_id=user_id).first()
-
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuário não encontrado")
-
-    session.delete(user)
-    session.commit()
-
-    return
+    delete_user_service(session, user_id)
 
 
 @router.get("/admin-area", response_model=UserPublic)

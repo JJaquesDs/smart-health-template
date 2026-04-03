@@ -63,3 +63,22 @@ uv pip install -e .
 ```
 
 IREI COLOCAR MAIS COISAS PARA RODAR APLICAÇÃO NO AR
+
+
+Para rodar a api entre no diretório do backend
+
+````doctest
+cd backend
+````
+
+Depois suba o servidor uvicorn para colocar a API no ar
+
+````doctest
+uvicorn app.main: app --reload
+````
+
+
+Depois pode entrar na apliação clicando em http://127.0.0.1:8000 no terminal, aperte (CTRL + C) para sair
+
+Para entrar na documentação da API no swagger entre em:  http://127.0.0.1:8000/docs, ali são mostradas todas as rotas da API
+
