@@ -11,7 +11,7 @@ def get_user_by_id(session: Session, user_id: int) -> Usuario | None:  # Pode re
 
 
 def get_user_by_email(session: Session, email: str) -> Usuario | None:  # Pode retornar ou não um Usuario
-    """ Função que retorna consulta com email """
+    """ Função que retorna consulta com 'email' """
 
     return session.query(Usuario).filter_by(email=email).first()
 
@@ -30,7 +30,7 @@ def get_all_users_in_db(session: Session) -> list[Usuario]:  # Retorna uma lista
     """ Função que retorna todos os Usuarios"""
 
     resultado = session.execute(select(Usuario))
-    return resultado.scalars8u().all()
+    return resultado.scalars().all()
 
 
 def delete_user_in_db(session: Session, user: Usuario) -> None:

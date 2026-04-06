@@ -8,6 +8,7 @@ import jwt
 
 from app.domains.users.models import Usuario
 from app.domains.users.schemas import UserUpdate
+from app.domains.users.enums import UserRole
 
 from app.core.config import settings
 
@@ -33,7 +34,7 @@ def create_user_service(
         telefone: str,
         email: str,
         senha: str,
-        role: str
+        role: UserRole
 ):
     """ Service Create Usuário """
 
@@ -61,6 +62,12 @@ def create_user_service(
             status_code=400,
             detail="Email ja cadastrado"
         )
+
+
+def is_admin_or_superuser(user: Usuario) -> bool:
+    """ Função só para verificar se Usuario é admin ou 'Superuser' comparando com um bool com os roles """
+
+    return user.role in {UserRole.ADMIN, UserRole.SUPERUSER}
 
 
 def authenticate_user(session: Session, email: str, senha: str):
@@ -142,7 +149,12 @@ def get_all_users_service(session: Session) -> list[Usuario]:
     return get_all_users_in_db(session)
 
 
-def update_user_service(session: Session, user_id: int, user_up: UserUpdate):
+def update_user_service(
+        session: Session,
+        user_atual: Usuario,
+        user_id: int,
+        user_up: UserUpdate
+):
     """ Service para atualizar Usuario"""
 
     user = get_user_by_id(session, user_id)  ## Verificando se o Usuario existe no banco
@@ -151,6 +163,12 @@ def update_user_service(session: Session, user_id: int, user_up: UserUpdate):
         raise HTTPException(
             status_code=404,
             detail="Usuário não encontrado"
+        )
+
+    if is_admin_or_superuser(user) and not is_admin_or_superuser(user_atual):  ## Verificação que não permite atualizar um admin ou 'superuser' a não ser 'superusers'
+        raise HTTPException(
+            status_code=404,
+            detail=" Você não tem autorização para atualizar esse Usuário "
         )
 
     if user_up.senha:
@@ -162,21 +180,25 @@ def update_user_service(session: Session, user_id: int, user_up: UserUpdate):
     return update_user_in_db(session, user)
 
 
-def delete_user_service(session: Session,user_id: int) -> None:
+def delete_user_service(
+        session: Session,
+        user_atual: Usuario,
+        user_id: int
+) -> None:
     """ Service de deletar usuário """
 
-    user = get_user_by_id(session, user_id)  ## Verificando se o Usuario existe no banco
+    user = get_user_by_id(session, user_id)    ## Verificando se o Usuario existe no banco
 
-    if not user:  ## Se o Usuario já existir no banco logo não vai ser criado o objeto 'user', então lança a Exception
+    if not user:    ## Se o Usuario já existir no banco logo não vai ser criado o objeto 'user', então lança a Exception
         raise HTTPException(
             status_code=404,
             detail="Usuário não encontrado"
         )
 
-    if user.role == "superuser":
+    if is_admin_or_superuser(user) and not is_admin_or_superuser(user_atual):  ## Verificação que não permite atualizar um admin ou 'superuser' a não ser 'superusers'
         raise HTTPException(
             status_code=403,
-            detail="Somente um Super Usuário pode deletar outro Super Usuário"
+            detail=" Você não tem permissão para deletar esse Usuário "
         )
 
     return delete_user_in_db(session, user)

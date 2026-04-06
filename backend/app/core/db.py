@@ -3,6 +3,8 @@ from sqlmodel import Session, create_engine
 from app.core.config import settings
 from app.core.connection import Base
 
+from app.domains.users.enums import UserRole
+
 engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 
 
@@ -28,7 +30,7 @@ def init_db(session: Session) -> None:
             telefone="000000000",
             email=settings.FIRST_SUPERUSER,
             senha=settings.FIRST_SUPERUSER_PASSWORD,
-            role="superuser"
+            role=UserRole.SUPERUSER
         )
 
 

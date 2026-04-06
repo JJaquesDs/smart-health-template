@@ -1,6 +1,8 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 
+from  app.domains.users.enums import UserRole
+
 
 class User(BaseModel):
     """ Classe base de usuarios """
@@ -8,7 +10,7 @@ class User(BaseModel):
     senha: str
     nome: str
     telefone: str
-    role: str
+    role: UserRole
 
 
 class UserPublic(BaseModel):
@@ -18,7 +20,7 @@ class UserPublic(BaseModel):
     nome: str
     telefone: str
     email: EmailStr
-    role: str
+    role: UserRole
 
     class Config:
         from_attributes = True  # Serialização dos dados, dizendo que virão de um orm SQLAlchemy

@@ -1,5 +1,7 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Enum, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
+
+from app.domains.users.enums import UserRole
 
 from app.core.connection import Base
 
@@ -14,7 +16,7 @@ class Usuario(Base):
     senha = Column(String(80), nullable=False)
     nome = Column(String(45), nullable=False)
     telefone = Column(String(45), nullable=False)
-    role = Column(String(15), nullable=False)
+    role = Column(Enum(UserRole), nullable=False, default=UserRole.USER)   ## Role padrão é "user"
 
     # Relacionamentos
     medicos = relationship("Medico", back_populates="usuario")
