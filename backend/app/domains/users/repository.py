@@ -20,8 +20,6 @@ def create_user_in_db(session: Session, user: Usuario) -> Usuario:
     """ Função que instância um Usuario no banco de dados """
 
     session.add(user)
-    session.commit()
-    session.refresh(user)
 
     return user
 

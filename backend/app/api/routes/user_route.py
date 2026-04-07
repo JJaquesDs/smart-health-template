@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from app.api.deps import get_current_user_dep, exigir_role, get_session
 
@@ -27,7 +28,7 @@ def read_usuario_atual(user: Usuario = Depends(get_current_user_dep)):
     return user
 
 
-@router.post("/",
+@router.post(path="/",
              response_model=UserPublic,
              summary="Criar usuário",
              description="Cria um novo usuário no sistema com role 'user' definida"
@@ -35,16 +36,24 @@ def read_usuario_atual(user: Usuario = Depends(get_current_user_dep)):
 def create_user(user_novo: UserCreate, session: Session = Depends(get_session)):
     """ Rota para criar usuario (USUARIO PADRAO co role 'USER' padrão)"""
 
-    user = create_user_service(
-        session=session,
-        nome=user_novo.nome,
-        telefone=user_novo.telefone,
-        email=user_novo.email,
-        senha=user_novo.senha,
-        role=UserRole.USER
-    )
+    #  Tenta criar um 'Usuario' com regras de 'service' se não der certo begin() desfaz as alterações e nao dá commit() no banco de dados
+    try:
+        with session.begin():
+            user = create_user_service(
+                session=session,
+                nome=user_novo.nome,
+                telefone=user_novo.telefone,
+                email=user_novo.email,
+                senha=user_novo.senha,
+                role=UserRole.USER
+            )
+        return user
 
-    return user
+    except IntegrityError:
+        raise HTTPException(
+            status_code=400,
+            detail="Erro ao salvar usuário"
+        )
 
 
 @router.post("/login")

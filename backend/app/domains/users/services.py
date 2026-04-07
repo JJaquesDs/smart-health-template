@@ -1,6 +1,5 @@
 from fastapi import HTTPException
 
-from typing import List, Type
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
@@ -19,12 +18,12 @@ from app.core.security import (
 )
 
 from app.domains.users.repository import (
-        get_user_by_id,
-        get_user_by_email,
-        create_user_in_db,
-        delete_user_in_db,
-        update_user_in_db,
-        get_all_users_in_db
+    get_user_by_id,
+    get_user_by_email,
+    create_user_in_db,
+    delete_user_in_db,
+    update_user_in_db,
+    get_all_users_in_db
 )
 
 
@@ -39,10 +38,11 @@ def create_user_service(
 ):
     """ Service Create Usuário """
 
+    # Regra de endereço eletrónico único
     if unique_email(session, email):
         raise HTTPException(400, "Email já cadastrado")
 
-    hashed_senha = get_password_hash(senha)    ## Função de app/core/security.py para pegar senha com hash
+    hashed_senha = get_password_hash(senha)  ## Função de app/core/security.py para criar senha com hash
 
     # Criação de objeto Usuario com os dados vindos dos parametros de entrada da função
     user = Usuario(
@@ -53,23 +53,16 @@ def create_user_service(
         role=role
     )
 
-    if role in {UserRole.ADMIN, UserRole.SUPERUSER}:                           ## Se quem tentar criar um 'admin' ou um 'superuser' e não tiver esses roles ou não for um 'Usuario' não tem permissão
-        if not usuer_atual or usuer_atual.role != UserRole.SUPERUSER:           ## Essa verificação só é feita no service caso ele seja importado e outro dev esquecer de usar função exigir_role()
+    #  Regra de permissão de criacão
+    if role in {UserRole.ADMIN, UserRole.SUPERUSER}:  ## Se quem tentar criar um 'admin' ou um 'superuser' e não tiver esses roles ou não for um 'Usuario' não tem permissão
+        if not usuer_atual or usuer_atual.role != UserRole.SUPERUSER:  ## Essa verificação só é feita no service caso ele seja importado e outro dev esquecer de usar função exigir_role()
             raise HTTPException(
                 status_code=401,
                 detail="Você não tem permissão para criar esse tipo de usuário"
             )
 
-    try:
-        return create_user_in_db(session, user)
-
-    except IntegrityError:
-        session.rollback()
-
-        raise HTTPException(
-            status_code=400,
-            detail="Email ja cadastrado"
-        )
+    # Persiste os dados, mas ainda não envia pro banco (dando commit())
+    return create_user_in_db(session, user)
 
 
 def is_admin_or_superuser(user: Usuario) -> bool:
@@ -81,21 +74,21 @@ def is_admin_or_superuser(user: Usuario) -> bool:
 def authenticate_user(session: Session, email: str, senha: str):
     """ Service que verifica autenticação do Usuario (SEM USO NO MOMENTO)"""
 
-    user = get_user_by_email(session, email)                ## Verificando se o Usuario existe pelo email por função de repository
+    user = get_user_by_email(session, email)  ## Verificando se o Usuario existe pelo email por função de repository
 
     if not user:
         return None
 
-    if not verify_password(senha, user.senha):              ## Função de verificação de senha de app/core/security.py
+    if not verify_password(senha, user.senha):  ## Função de verificação de senha de app/core/security.py
         return None
 
-    return user                                             # Se 'email' existe e 'senha' verificada retorna usuario autenticado
+    return user  # Se 'email' existe e 'senha' verificada retorna usuario autenticado
 
 
 def login_service(session: Session, email: str, senha: str):
     """ Service de login """
 
-    user = get_user_by_email(session, email)                ## Verificando se o Usuario existe pelo 'email' por função de repository
+    user = get_user_by_email(session, email)  ## Verificando se o Usuario existe pelo 'email' por função de repository
 
     if not user or not verify_password(senha, user.senha):
         raise HTTPException(
@@ -103,9 +96,10 @@ def login_service(session: Session, email: str, senha: str):
             detail="Email ou senha incorretos"
         )
 
-    acces_token = create_access_token(user)                 # Se houver 'email' e senha verificada, cria um 'token' de acesso para 'user'
+    acces_token = create_access_token(
+        user)  # Se houver 'email' e senha verificada, cria um 'token' de acesso para 'user'
 
-    return {                                                # retorna tupla com 'token'
+    return {  # retorna tupla com 'token'
         "access_token": acces_token,
         "token_type": "bearer"
     }
@@ -167,13 +161,14 @@ def update_user_service(
 
     user = get_user_by_id(session, user_id)  ## Verificando se o Usuario existe no banco
 
-    if not user:                             ## Se o Usuario já existir no banco logo não vai ser criado o objeto 'user', então lança a Exception
+    if not user:  ## Se o Usuario já existir no banco logo não vai ser criado o objeto 'user', então lança a Exception
         raise HTTPException(
             status_code=404,
             detail="Usuário não encontrado"
         )
 
-    if is_admin_or_superuser(user) and not is_admin_or_superuser(user_atual):  ## Verificação que não permite atualizar um admin ou 'superuser' a não ser 'superusers'
+    if is_admin_or_superuser(user) and not is_admin_or_superuser(
+            user_atual):  ## Verificação que não permite atualizar um admin ou 'superuser' a não ser 'superusers'
         raise HTTPException(
             status_code=404,
             detail=" Você não tem autorização para atualizar esse Usuário "
@@ -195,15 +190,16 @@ def delete_user_service(
 ) -> None:
     """ Service de deletar usuário """
 
-    user = get_user_by_id(session, user_id)    ## Verificando se o Usuario existe no banco
+    user = get_user_by_id(session, user_id)  ## Verificando se o Usuario existe no banco
 
-    if not user:    ## Se o Usuario já existir no banco logo não vai ser criado o objeto 'user', então lança a Exception
+    if not user:  ## Se o Usuario já existir no banco logo não vai ser criado o objeto 'user', então lança a Exception
         raise HTTPException(
             status_code=404,
             detail="Usuário não encontrado"
         )
 
-    if is_admin_or_superuser(user) and not is_admin_or_superuser(user_atual):  ## Verificação que não permite atualizar um admin ou 'superuser' a não ser 'superusers'
+    if is_admin_or_superuser(user) and not is_admin_or_superuser(
+            user_atual):  ## Verificação que não permite atualizar um admin ou 'superuser' a não ser 'superusers'
         raise HTTPException(
             status_code=403,
             detail=" Você não tem permissão para deletar esse Usuário "

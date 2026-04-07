@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from app.api.deps import get_current_user_dep, exigir_role, get_session
 
@@ -21,15 +22,22 @@ def create_admin(
 ):
     """ Rota para criar 'admins' (somente 'Superusuário') """
 
-    return create_user_service(
-        session=session,
-        nome=admin_novo.nome,
-        telefone=admin_novo.telefone,
-        email=admin_novo.email,
-        senha=admin_novo.senha,
-        role=UserRole.ADMIN,
-        usuer_atual=user_atual
-    )
+    try:
+        with session.begin():
+            return create_user_service(
+                session=session,
+                nome=admin_novo.nome,
+                telefone=admin_novo.telefone,
+                email=admin_novo.email,
+                senha=admin_novo.senha,
+                role=UserRole.ADMIN,
+                usuer_atual=user_atual
+            )
+    except IntegrityError:
+        raise HTTPException(
+            status_code=400,
+            detail="Erro ao criar Usuário administrador"
+        )
 
 
 @router.get("/area", response_model=UserPublic)
