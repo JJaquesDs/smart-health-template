@@ -62,8 +62,6 @@ def create_secretaria_service(
         )
 
     except IntegrityError:
-        session.rollback()
-
         raise HTTPException(
             status_code=400,
             detail="Erro ao criar o usuário secretária"

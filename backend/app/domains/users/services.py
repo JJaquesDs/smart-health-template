@@ -96,8 +96,7 @@ def login_service(session: Session, email: str, senha: str):
             detail="Email ou senha incorretos"
         )
 
-    acces_token = create_access_token(
-        user)  # Se houver 'email' e senha verificada, cria um 'token' de acesso para 'user'
+    acces_token = create_access_token(user)  # Se houver 'email' e senha verificada, cria um 'token' de acesso para 'user'
 
     return {  # retorna tupla com 'token'
         "access_token": acces_token,
@@ -161,22 +160,25 @@ def update_user_service(
 
     user = get_user_by_id(session, user_id)  ## Verificando se o Usuario existe no banco
 
-    if not user:  ## Se o Usuario já existir no banco logo não vai ser criado o objeto 'user', então lança a Exception
+    # Se o Usuario já existir no banco logo não vai ser criado o objeto 'user', então lança a Exception
+    if not user:
         raise HTTPException(
             status_code=404,
             detail="Usuário não encontrado"
         )
 
-    if is_admin_or_superuser(user) and not is_admin_or_superuser(
-            user_atual):  ## Verificação que não permite atualizar um admin ou 'superuser' a não ser 'superusers'
+    # Regra de permissão
+    if is_admin_or_superuser(user) and not is_admin_or_superuser(user_atual):  # Verificação que não permite atualizar um admin ou 'superuser' a não ser 'superusers'
         raise HTTPException(
             status_code=404,
             detail=" Você não tem autorização para atualizar esse Usuário "
         )
 
+    # Criação de senha hash para 'Usuario' (caso ele altere)
     if user_up.senha:
-        user_up.senha = get_password_hash(user_up.senha)  ## Criando o hash do Usuario
+        user_up.senha = get_password_hash(user_up.senha)
 
+    # Atualização dos dados
     for chave, valor in user_up.dict(exclude_unset=True).items():
         setattr(user, chave, valor)
 
@@ -198,8 +200,8 @@ def delete_user_service(
             detail="Usuário não encontrado"
         )
 
-    if is_admin_or_superuser(user) and not is_admin_or_superuser(
-            user_atual):  ## Verificação que não permite atualizar um admin ou 'superuser' a não ser 'superusers'
+    # Regra de permissão
+    if is_admin_or_superuser(user) and not is_admin_or_superuser(user_atual):  ## Verificação que não permite atualizar um admin ou 'superuser' a não ser 'superusers'
         raise HTTPException(
             status_code=403,
             detail=" Você não tem permissão para deletar esse Usuário "

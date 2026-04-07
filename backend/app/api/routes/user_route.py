@@ -38,15 +38,16 @@ def create_user(user_novo: UserCreate, session: Session = Depends(get_session)):
 
     #  Tenta criar um 'Usuario' com regras de 'service' se não der certo begin() desfaz as alterações e nao dá commit() no banco de dados
     try:
-        with session.begin():
-            user = create_user_service(
-                session=session,
-                nome=user_novo.nome,
-                telefone=user_novo.telefone,
-                email=user_novo.email,
-                senha=user_novo.senha,
-                role=UserRole.USER
-            )
+        user = create_user_service(
+            session=session,
+            nome=user_novo.nome,
+            telefone=user_novo.telefone,
+            email=user_novo.email,
+            senha=user_novo.senha,
+            role=UserRole.USER
+        )
+        session.commit()
+
         return user
 
     except IntegrityError:
@@ -82,7 +83,18 @@ def update_user(
 ):
     """ Rota para atualizar Usuario (exige admin e superuser) """
 
-    return update_user_service(session, user_atual, user_id, user_up)
+    # Tenta atualizar um 'Usuario' com regras de 'service' se não der certo begin() desfaz as alterações e nao dá commit() no banco de dados
+    try:
+        user = update_user_service(session, user_atual, user_id, user_up)
+        session.commit()
+
+        return user
+
+    except IntegrityError:
+        raise HTTPException(
+            status_code=400,
+            detail="Erro ao atualizar usuário"
+        )
 
 
 @router.delete("/{user_id}", status_code=204)
@@ -93,9 +105,18 @@ def delete_user(
 ):
     """ Rota para deletar Usuario (exige admin ou superuser)"""
 
-    delete_user_service(session, user_atual, user_id)
+    # Tenta atualizar um 'Usuario' com regras de 'service' se não der certo begin() desfaz as alterações e nao dá commit() no banco de dados
+    try:
+        delete_user_service(session, user_atual, user_id)
+        session.commit()
 
-    return {
-        "message": "Usuário deletado com sucesso"
-    }
+        return {
+            "message": "Usuário deletado com sucesso"
+        }
+
+    except IntegrityError:
+        raise HTTPException(
+            status_code=400,
+            detail="Erro ao deletar usuário"
+        )
 

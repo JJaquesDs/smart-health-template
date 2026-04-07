@@ -35,13 +35,11 @@ def delete_user_in_db(session: Session, user: Usuario) -> None:
     """ Função que deleta um Usuario no banco de dados """
 
     session.delete(user)
-    session.commit()
 
 
 def update_user_in_db(session: Session, user) -> Usuario:
     """ Função que atualiza um Usuario no banco de dados """
 
-    session.commit()
-    session.refresh(user)
+    # Aqui apenas retornamos o 'Usuario' porque o parâmetro 'session' do SqlAlchemy já detecta automaticamente mudanças nos dados
 
     return user
