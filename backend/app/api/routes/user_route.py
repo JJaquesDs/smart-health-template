@@ -51,6 +51,7 @@ def create_user(user_novo: UserCreate, session: Session = Depends(get_session)):
         return user
 
     except IntegrityError:
+        session.rollback()
         raise HTTPException(
             status_code=400,
             detail="Erro ao salvar usuário"
@@ -91,6 +92,7 @@ def update_user(
         return user
 
     except IntegrityError:
+        session.rollback()
         raise HTTPException(
             status_code=400,
             detail="Erro ao atualizar usuário"
@@ -115,6 +117,7 @@ def delete_user(
         }
 
     except IntegrityError:
+        session.rollback()
         raise HTTPException(
             status_code=400,
             detail="Erro ao deletar usuário"

@@ -53,6 +53,9 @@ def create_user_service(
         role=role
     )
 
+    # Garantindo do banco o 'usario_id' por ser autoincrement
+    session.flush()
+
     #  Regra de permissão de criacão
     if role in {UserRole.ADMIN, UserRole.SUPERUSER}:  ## Se quem tentar criar um 'admin' ou um 'superuser' e não tiver esses roles ou não for um 'Usuario' não tem permissão
         if not usuer_atual or usuer_atual.role != UserRole.SUPERUSER:  ## Essa verificação só é feita no service caso ele seja importado e outro dev esquecer de usar função exigir_role()
