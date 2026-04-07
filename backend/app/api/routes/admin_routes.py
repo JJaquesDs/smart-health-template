@@ -17,7 +17,7 @@ router = APIRouter(prefix="/admin", tags=['admin'])
 def create_admin(
         admin_novo: UserCreate,
         session: Session = Depends(get_session),
-        usuario_atual: Usuario = Depends(exigir_role([UserRole.SUPERUSER]))
+        user_atual: Usuario = Depends(exigir_role([UserRole.SUPERUSER]))
 ):
     """ Rota para criar 'admins' (somente 'Superusuário') """
 
@@ -27,7 +27,8 @@ def create_admin(
         telefone=admin_novo.telefone,
         email=admin_novo.email,
         senha=admin_novo.senha,
-        role=UserRole.ADMIN
+        role=UserRole.ADMIN,
+        usuer_atual=user_atual
     )
 
 

@@ -11,7 +11,7 @@ ALGORITHM = "HS256"
 
 
 def create_access_token(user):
-    """ Função que cria um ‘token’ de acesso para 'usuários """
+    """ Função que cria um ‘token’ de acesso para 'Usuario' """
 
     expiracao = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 

@@ -34,7 +34,8 @@ def create_user_service(
         telefone: str,
         email: str,
         senha: str,
-        role: UserRole
+        role: UserRole,
+        usuer_atual: Usuario | None = None
 ):
     """ Service Create Usuário """
 
@@ -51,6 +52,13 @@ def create_user_service(
         telefone=telefone,
         role=role
     )
+
+    if role in {UserRole.ADMIN, UserRole.SUPERUSER}:                           ## Se quem tentar criar um 'admin' ou um 'superuser' e não tiver esses roles ou não for um 'Usuario' não tem permissão
+        if not usuer_atual or usuer_atual.role != UserRole.SUPERUSER:           ## Essa verificação só é feita no service caso ele seja importado e outro dev esquecer de usar função exigir_role()
+            raise HTTPException(
+                status_code=401,
+                detail="Você não tem permissão para criar esse tipo de usuário"
+            )
 
     try:
         return create_user_in_db(session, user)
@@ -71,7 +79,7 @@ def is_admin_or_superuser(user: Usuario) -> bool:
 
 
 def authenticate_user(session: Session, email: str, senha: str):
-    """ Service que verifica autenticação do Usuario """
+    """ Service que verifica autenticação do Usuario (SEM USO NO MOMENTO)"""
 
     user = get_user_by_email(session, email)                ## Verificando se o Usuario existe pelo email por função de repository
 

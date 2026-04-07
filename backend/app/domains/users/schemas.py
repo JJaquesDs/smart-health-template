@@ -32,6 +32,7 @@ class UserCreate(BaseModel):
     senha: str
     nome: str
     telefone: str
+    role: UserRole
 
 
 class UserUpdate(BaseModel):

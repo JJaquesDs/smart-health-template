@@ -27,9 +27,13 @@ def read_usuario_atual(user: Usuario = Depends(get_current_user_dep)):
     return user
 
 
-@router.post("/", response_model=UserPublic)
+@router.post("/",
+             response_model=UserPublic,
+             summary="Criar usuário",
+             description="Cria um novo usuário no sistema com role 'user' definida"
+)
 def create_user(user_novo: UserCreate, session: Session = Depends(get_session)):
-    """ Rota para criar usuario """
+    """ Rota para criar usuario (USUARIO PADRAO co role 'USER' padrão)"""
 
     user = create_user_service(
         session=session,
@@ -37,7 +41,7 @@ def create_user(user_novo: UserCreate, session: Session = Depends(get_session)):
         telefone=user_novo.telefone,
         email=user_novo.email,
         senha=user_novo.senha,
-        role=user_novo.role
+        role=UserRole.USER
     )
 
     return user
