@@ -33,7 +33,10 @@ def read_usuario_atual(user: Usuario = Depends(get_current_user_dep)):
              summary="Criar usuário",
              description="Cria um novo usuário no sistema com role 'user' definida"
 )
-def create_user(user_novo: UserCreate, session: Session = Depends(get_session)):
+def create_user(
+        user_novo: UserCreate,
+        session: Session = Depends(get_session)
+):
     """ Rota para criar usuario (USUARIO PADRAO co role 'USER' padrão)"""
 
     #  Tenta criar um 'Usuario' com regras de 'service' se não der certo begin() desfaz as alterações e nao dá commit() no banco de dados

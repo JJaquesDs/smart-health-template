@@ -10,7 +10,6 @@ class Secretaria(Base):
     __tablename__ = "secretarias"
 
     secretaria_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    nome = Column(String(45), nullable=False)
     cpf = Column(String(14), nullable=False, unique=True)
     rg = Column(String(15), nullable=False)
 

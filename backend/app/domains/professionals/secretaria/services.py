@@ -1,5 +1,7 @@
 from fastapi import HTTPException
 
+import traceback
+
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
@@ -8,6 +10,10 @@ from app.domains.professionals.secretaria.models import Secretaria
 
 from app.domains.users import schemas
 from app.domains.professionals.secretaria import schemas
+
+from app.domains.professionals.secretaria.repository import (
+    create_secretaria_db
+)
 
 from app.domains.users.enums import UserRole
 
@@ -22,7 +28,8 @@ from app.domains.users.services import (
     get_user_by_email,
     get_user_by_id,
     get_password_hash,
-    create_user_service
+    create_user_service,
+    is_admin_or_superuser
 )
 
 from app.domains.users.repository import (
@@ -38,7 +45,7 @@ def create_secretaria_service(
         senha: str,
         cpf: str,
         rg,
-        role: UserRole,
+        role: UserRole.SECRETARIA,
         usuer_atual: Usuario | None = None
 ):
     """ Service para criar um 'Usuario' Secretáia """
@@ -51,17 +58,22 @@ def create_secretaria_service(
             telefone=telefone,
             email=email,
             senha=senha,
-            role=UserRole.SECRETARIA
+            role=role
         )
+
+        # Garantindo do banco o 'usario_id' por ser autoincrement
+        session.flush()
 
         secretaria = Secretaria(
-            user_id=user.usuario_id,
-            nome=user.nome,
             cpf=cpf,
             rg=rg,
+            usuario_id=user.usuario_id
         )
 
+        return create_secretaria_db(session, secretaria)
+
     except IntegrityError:
+        print(traceback.format_exc())
         raise HTTPException(
             status_code=400,
             detail="Erro ao criar o usuário secretária"

@@ -5,6 +5,8 @@ from sqlalchemy.exc import IntegrityError
 
 import jwt
 
+import traceback
+
 from app.domains.users.models import Usuario
 from app.domains.users.schemas import UserUpdate
 from app.domains.users.enums import UserRole
