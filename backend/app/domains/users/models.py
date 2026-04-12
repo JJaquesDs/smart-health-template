@@ -19,8 +19,20 @@ class Usuario(Base):
     role = Column(Enum(UserRole), nullable=False, default=UserRole.USER)   ## Role padrão é "user"
 
     # Relacionamentos
-    medicos = relationship("Medico", back_populates="usuario")
-    secretarias = relationship("Secretaria", back_populates="usuario")
+    medicos = relationship(
+        argument="Medico",
+        back_populates="usuario",
+        cascade="all, delete",
+        passive_deletes=True
+    )
+
+    secretarias = relationship(
+        argument="Secretaria",
+        back_populates="usuario",
+        cascade="all, delete",
+        passive_deletes=True
+    )
+
     admins = relationship("Administrador", back_populates="usuario")
 
 

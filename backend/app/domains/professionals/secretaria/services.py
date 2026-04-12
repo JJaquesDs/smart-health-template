@@ -8,32 +8,26 @@ from sqlalchemy.exc import IntegrityError
 from app.domains.users.models import Usuario
 from app.domains.professionals.secretaria.models import Secretaria
 
-from app.domains.users import schemas
-from app.domains.professionals.secretaria import schemas
+from app.domains.users.schemas import (
+    UserUpdate
+)
+
+from app.domains.professionals.secretaria.schemas import (
+    SecretariaUpdate
+)
 
 from app.domains.professionals.secretaria.repository import (
-    create_secretaria_db
+    create_secretaria_db,
+    update_secretaria_db,
+    get_secretaria_by_user_id
 )
 
 from app.domains.users.enums import UserRole
 
-from app.api.deps import (
-    get_session,
-    get_current_user_dep,
-    exigir_role
-)
 
 from app.domains.users.services import (
-    unique_email,
-    get_user_by_email,
-    get_user_by_id,
-    get_password_hash,
     create_user_service,
-    is_admin_or_superuser
-)
-
-from app.domains.users.repository import (
-    create_user_in_db
+    update_user_service
 )
 
 
@@ -44,7 +38,7 @@ def create_secretaria_service(
         email: str,
         senha: str,
         cpf: str,
-        rg,
+        rg: str,
         role: UserRole.SECRETARIA,
         usuer_atual: Usuario | None = None
 ):
@@ -77,6 +71,38 @@ def create_secretaria_service(
         raise HTTPException(
             status_code=400,
             detail="Erro ao criar o usuário secretária"
+        )
+
+
+def update_secretaria_service(
+        session: Session,
+        user_atual: Usuario,
+        user_id: int,
+        user_up: UserUpdate,
+        sec_up: SecretariaUpdate
+):
+
+    try:
+        user = update_user_service(session, user_atual, user_id, user_up)
+
+        secretaria = get_secretaria_by_user_id(session, user_id)
+
+        if not secretaria:
+            raise HTTPException(
+                status_code=404,
+                detail="Secretária não encontrada"
+            )
+
+        for chave, valor in sec_up.model_dump(exclude_unset=True).items():
+            setattr(secretaria, chave, valor)
+
+        return update_secretaria_db(session, secretaria)
+
+    except IntegrityError:
+        session.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Não foi possível atualizar secretária"
         )
 
 

@@ -13,8 +13,20 @@ class Secretaria(Base):
     cpf = Column(String(14), nullable=False, unique=True)
     rg = Column(String(15), nullable=False)
 
-    usuario_id = Column(Integer, ForeignKey("usuarios.usuario_id", ondelete="CASCADE"), nullable=False)  # ForeignKey de usuario
+    # ForeignKey de usuario
+    usuario_id = Column(Integer, ForeignKey(
+        column="usuarios.usuario_id",
+        ondelete="CASCADE"),
+        nullable=False
+    )
 
-    usuario = relationship("Usuario", back_populates="secretarias")  # criando uma relação bidirecional que permite acessar o usuario de uma secretaria e todas as secretarias de um usuario
-    consultas = relationship("Consulta", back_populates="secretaria")  # relação para que secretárias agendem consultas
+    # criando uma relação bidirecional que permite acessar o usuario de uma secretaria e todas as secretarias de um usuario
+    usuario = relationship(
+        argument="Usuario",
+        back_populates="secretarias",
+        cascade="all, delete",
+        passive_deletes=True
+    )
+
+    consultas = relationship(argument="Consulta", back_populates="secretaria")  # relação para que secretárias agendem consultas
 

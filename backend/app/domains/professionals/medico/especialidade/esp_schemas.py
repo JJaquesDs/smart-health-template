@@ -2,27 +2,35 @@ from pydantic import BaseModel
 from typing import Optional
 
 
-class AreaBase(BaseModel):
+class EspecialidadeBase(BaseModel):
     """ Classe base de Área de atuação """
 
     titulo: str
-    status: str
 
 
-class AreaPublic(AreaBase):
+class EspecialidadePublic(EspecialidadeBase):
     """ Classe Pública usada para retornar dados pela API sem expor informações sensiveis """
-    area_id: int
+    esp_id: int
 
     class Config:
         from_attributes = True  # Serialização dos dados, dizendo que virão de um orm SQLAlchemy
 
 
-class AreaCreate(AreaBase):
+class EspecialidadeResumo(BaseModel):
+    """ 'Especialidade Resumo' irá evitar loops infinitos e 'jsons' gigantes """
+
+    esp_id: int
+    titulo: str
+
+    class Config:
+        from_attributes = True
+
+
+class EspecialidadeCreate(EspecialidadeBase):
     """ Schema nao adiciona nem remove campos ao Modelo Base (serve apenas para separar das demais classes: 'Base' / ‘Update’) """
     pass
 
 
-class AreaUpdate(BaseModel):
-    """ Classe de atualização de area """
+class EspecialidadeUpdate(BaseModel):
+    """ Classe de atualização de especialidade """
     titulo: Optional[str]
-    status: Optional[str]

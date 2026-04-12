@@ -1,3 +1,5 @@
+import traceback
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -96,6 +98,7 @@ def update_user(
 
     except IntegrityError:
         session.rollback()
+        print(traceback.format_exc())
         raise HTTPException(
             status_code=400,
             detail="Erro ao atualizar usuário"
@@ -121,6 +124,7 @@ def delete_user(
 
     except IntegrityError:
         session.rollback()
+        print(traceback.format_exc())
         raise HTTPException(
             status_code=400,
             detail="Erro ao deletar usuário"

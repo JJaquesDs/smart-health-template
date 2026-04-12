@@ -40,7 +40,7 @@ def create_admin(
         )
 
 
-@router.get("/area", response_model=UserPublic)
+@router.get("/current_admin_area", response_model=UserPublic)
 def admin_area(user: Usuario = Depends(exigir_role([UserRole.ADMIN, UserRole.SUPERUSER]))):
     """ Rota protegida que exige papel admin """
 
