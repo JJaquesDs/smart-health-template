@@ -34,6 +34,16 @@ RoleProtegida = Annotated[
         "mas campos exclusivos do médico só podem ser enviados por usuários com role medico."
     ),
     response_description="Paciente criado com sucesso.",
+    responses={
+        400: {"description": "Erro de integridade, CPF/email duplicado ou dados inválidos."},
+        401: {"description": "Usuário não autenticado."},
+        403: {
+            "description": (
+                "Usuário sem permissão para acessar a rota ou tentando alterar campos "
+                "exclusivos do médico."
+            )
+        },
+    },
 )
 def create_patient(
     patient_in: PacienteCreate,
@@ -56,6 +66,10 @@ def create_patient(
     summary="Listar pacientes",
     description="Lista os pacientes cadastrados no sistema com visibilidade ajustada pelo perfil do usuário.",
     response_description="Lista de pacientes retornada com sucesso.",
+    responses={
+        401: {"description": "Usuário não autenticado."},
+        403: {"description": "Usuário sem permissão para acessar a listagem de pacientes."},
+    },
 )
 def read_patients(
     user_atual: RoleProtegida,
@@ -71,6 +85,11 @@ def read_patients(
     summary="Consultar paciente",
     description="Retorna os dados de um paciente específico.",
     response_description="Paciente retornado com sucesso.",
+    responses={
+        401: {"description": "Usuário não autenticado."},
+        403: {"description": "Usuário sem permissão para acessar o paciente."},
+        404: {"description": "Paciente não encontrado."},
+    },
 )
 def read_patient(
     user_atual: RoleProtegida,
@@ -90,6 +109,17 @@ def read_patient(
         "Campos exclusivos do médico só podem ser alterados por médicos."
     ),
     response_description="Paciente atualizado com sucesso.",
+    responses={
+        400: {"description": "Erro de integridade, CPF/email duplicado ou dados inválidos."},
+        401: {"description": "Usuário não autenticado."},
+        403: {
+            "description": (
+                "Usuário sem permissão para acessar a rota ou tentando alterar campos "
+                "exclusivos do médico."
+            )
+        },
+        404: {"description": "Paciente não encontrado."},
+    },
 )
 def update_patient(
     patient_in: PacienteUpdate,
@@ -112,7 +142,13 @@ def update_patient(
     status_code=204,
     summary="Excluir paciente",
     description="Remove um paciente do sistema.",
-    responses={204: {"description": "Paciente removido com sucesso."}},
+    responses={
+        204: {"description": "Paciente removido com sucesso."},
+        400: {"description": "Erro ao remover o paciente."},
+        401: {"description": "Usuário não autenticado."},
+        403: {"description": "Usuário sem permissão para excluir o paciente."},
+        404: {"description": "Paciente não encontrado."},
+    },
 )
 def delete_patient(
     _user_atual: RoleProtegida,
