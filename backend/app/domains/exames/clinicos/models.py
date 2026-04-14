@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Boolean, String, DateTime, ForeignKey
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import relationship
 
 from datetime import datetime
@@ -45,4 +45,19 @@ class ResultadoExameClinicoIa:
 
 
     #  Ela ainda n tem schemas ou classe pública, pois não possui dados sensíveis como senhas
+
+
+class ExameCatalogo(Base):
+    """Catálogo de exames usado pelo frontend administrativo."""
+
+    __tablename__ = "catalogo_exames"
+
+    exame_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    nome = Column(String(120), nullable=False, unique=True)
+    categoria = Column(String(30), nullable=False)
+    descricao = Column(Text, nullable=False)
+    preco = Column(Numeric(10, 2), nullable=False)
+    preparacao = Column(Text, nullable=True)
+    observacoes = Column(Text, nullable=True)
+    ativo = Column(Boolean, nullable=False, default=True)
 
