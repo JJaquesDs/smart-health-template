@@ -26,7 +26,8 @@ def init_db(session: Session) -> None:
     if not super_user:
         user_service.create_user_service(session=session, nome="Super Usuario", telefone="000000000",
                                          email=settings.FIRST_SUPERUSER, senha=settings.FIRST_SUPERUSER_PASSWORD,
-                                         role=UserRole.SUPERUSER)
+                                         role=UserRole.SUPERUSER,
+                                         allow_superuser_bootstrap=True)
 
 
 

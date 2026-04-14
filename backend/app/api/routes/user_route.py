@@ -37,7 +37,7 @@ def create_user(
         user_novo: UserCreate,
         session: Session = Depends(get_session)
 ):
-    """ Rota para criar usuario (USUARIO PADRAO co role 'USER' padrão)"""
+    """ Rota para criar usuario com role e perfil profissional opcional """
 
     #  Tenta criar um 'Usuario' com regras de 'service' se não der certo begin() desfaz as alterações e nao dá commit() no banco de dados
     try:
@@ -47,7 +47,14 @@ def create_user(
             telefone=user_novo.telefone,
             email=user_novo.email,
             senha=user_novo.senha,
-            role=UserRole.USER
+            role=user_novo.role,
+            registro_profissional=user_novo.registro_profissional,
+            especialidade_principal=user_novo.especialidade_principal,
+            instituicao=user_novo.instituicao,
+            universidade=user_novo.universidade,
+            ano_formacao=user_novo.ano_formacao,
+            residencia_medica=user_novo.residencia_medica,
+            especializacoes=user_novo.especializacoes,
         )
         session.commit()
 
