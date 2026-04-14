@@ -25,7 +25,7 @@ class Medico(Base):
     med_esps = relationship(               # relação 'N:N' via tabela associativa 'MedicoEspecialidade'
         argument="MedicoEspecialidade",
         back_populates="medico",
-        cascade="all, delete"
+        cascade="all, delete-orphan"
     )
 
     consultas = relationship(                   # relação para que um médico peça uma consulta

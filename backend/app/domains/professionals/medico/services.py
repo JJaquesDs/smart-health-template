@@ -6,15 +6,20 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
 from app.domains.users.models import Usuario
+from app.domains.users.schemas import UserUpdate
 from app.domains.users.enums import UserRole
 
+
 from app.domains.professionals.medico.models import Medico
+from app.domains.professionals.medico.schemas import MedicoUpdate
 
 from app.domains.professionals.medico.medico_esp.model import MedicoEspecialidade
-
+from app.domains.professionals.medico.medico_esp.enums_med_esp import StatusEsp
 from app.domains.professionals.medico.medico_esp.schemas import MedicoEspCreate
 
-from app.domains.professionals.medico.medico_esp.enums_med_esp import StatusEsp
+from app.domains.users.services import update_user_service
+
+from app.domains.professionals.medico.repository import get_medico_by_user_id
 
 from app.domains.professionals.medico.especialidade.repository import (
     get_esp_by_id
@@ -104,3 +109,40 @@ def create_medico_service(
             status_code=400,
             detail="Erro ao criar usuário médico"
         )
+
+
+def update_medico_service(
+        session:  Session,
+        user_atual: Usuario,
+        user_id: int,
+        user_up: UserUpdate,
+        medico_up: MedicoUpdate
+):
+    """ Função para atualizar um 'Medico' """
+
+    try:
+
+        user = update_user_service(session, user_atual, user_id, user_up)
+
+        medico = get_medico_by_user_id(session, user_id)
+
+        if not medico:
+            raise HTTPException(
+            status_code=404,
+            detail="Médico não encontrado"
+        )
+
+        # Atualizando só os dados do 'Medico'
+        for chave, valor in medico_up.model_dump(
+            exclude={"user", "med_esp"},
+            exclude_unset=True
+        ).items():
+            setattr(medico, chave, valor)
+
+        # Se houver alteração na 'Especialidades' '(N:N)'
+        if medico_up.med_esp is not None:
+            pass
+
+    except IntegrityError:
+        pass
+

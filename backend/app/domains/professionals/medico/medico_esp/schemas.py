@@ -34,6 +34,13 @@ class MedicoEspCreate(BaseModel):
     status: StatusEsp
 
 
+class MedicoEspUpdate(BaseModel):
+    """ Classe para Atualizar um 'Medico Especialidae' """
+
+    esp_id: int
+    status: StatusEsp
+
+
 from app.domains.professionals.medico.schemas import MedicoResumo
 
 MedicoEspPublic.model_rebuild()  ## Resolve a classe depois que carregar tudo (erro de import circular)

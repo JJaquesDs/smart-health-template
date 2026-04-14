@@ -1,22 +1,26 @@
 from sqlalchemy.orm import Session
 
+from app.core.base_repository import BaseRepository
+
 from app.domains.professionals.medico.models import Medico
 
-from app.domains.users.repository import (
-    get_user_by_id,
-    get_user_by_email,
-)
 
+class MedicoRepository(BaseRepository):
+    """ Repository Pattern de 'Medico' herdando de 'BaseRepository' """
 
-def create_medico_db(session: Session, medico: Medico):
-    """ Função que instância 'medico' no banco de dados """
+    def __init__(self):
+        """ Inicialização da classe """
 
-    session.add(medico)
+        super().__init__(  # Pegando tudo da SuperClasse ou Classe Pai
+            model=Medico,
+            campo_id="medico_id"
+        )
 
-    return medico
+    def get_by_user_id(self, session: Session, user_id: int):
+        """ Método para retornar uma 'Medico' pelo 'user_id' """
 
-
-def get_medico_by_user_id(session: Session, medico_id: int) -> Medico | None:
-    """ Função que consulta um médico pelo 'user_id' """
-
-    return session.query(Medico).filter_by(user_id=Medico.medico_id).first()
+        return self.get_by_campo(
+            session=session,
+            campo=Medico.usuario_id,
+            valor=user_id
+        )

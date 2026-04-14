@@ -58,7 +58,7 @@ class MedicoUpdate(BaseModel):
     rg: Optional[str]
     crm_numero: Optional[str]
     crm_UF: Optional[str]
-    med_esp_id: Optional[int]
+    med_esp: Optional[list["MedicoEspUpdate"]]
 
 
 class MedicoGet(BaseModel):
@@ -76,6 +76,10 @@ class MedicoGet(BaseModel):
         from_attributes = True
 
 
-from app.domains.professionals.medico.medico_esp.schemas import MedicoEspPublic, MedicoEspCreate
+from app.domains.professionals.medico.medico_esp.schemas import (
+    MedicoEspPublic,
+    MedicoEspCreate,
+    MedicoEspUpdate
+)
 
 MedicoPublic.model_rebuild()  ## Carrega tudo após resolver a classe (erro de import circular)

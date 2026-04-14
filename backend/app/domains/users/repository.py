@@ -1,45 +1,26 @@
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.domains.users.models import Usuario
 
-
-def get_user_by_id(session: Session, user_id: int) -> Usuario | None:  # Pode retornar ou não um Usuario
-    """ Função que retorna consulta com o 'id' """
-
-    return session.query(Usuario).filter_by(usuario_id=user_id).first()
+from app.core.base_repository import BaseRepository
 
 
-def get_user_by_email(session: Session, email: str) -> Usuario | None:  # Pode retornar ou não um Usuario
-    """ Função que retorna consulta com 'email' """
+class UsuarioRepository(BaseRepository):
+    """ Repository Pattern de 'Usuário' herdando de 'BaseRepository' """
 
-    return session.query(Usuario).filter_by(email=email).first()
+    def __init__(self):
+        """ Inicialização da classe """
 
+        super().__init__(  # Pegando tudo da SuperClasse ou Classe Pai
+            model=Usuario,
+            campo_id="usuario_id"
+        )
 
-def create_user_in_db(session: Session, user: Usuario) -> Usuario:
-    """ Função que instância um Usuario no banco de dados """
+    def get_by_email(self, session: Session, email: str):
+        """ Método para consultar por 'email' (Reutilizando get_by_campo como o campo sendo 'email') """
 
-    session.add(user)
-
-    return user
-
-
-def get_all_users_in_db(session: Session) -> list[Usuario]:  # Retorna uma lista de Usuario
-    """ Função que retorna todos os Usuarios"""
-
-    resultado = session.execute(select(Usuario))
-    return resultado.scalars().all()
-
-
-def delete_user_in_db(session: Session, user: Usuario) -> None:
-    """ Função que deleta um Usuario no banco de dados """
-
-    session.delete(user)
-
-
-def update_user_in_db(session: Session, user) -> Usuario:
-    """ Função que atualiza um Usuario no banco de dados """
-
-    # Aqui apenas retornamos o 'Usuario' porque o parâmetro 'session' do SqlAlchemy já detecta automaticamente mudanças nos dados
-
-    return user
+        return self.get_by_campo(
+            session=session,
+            campo=Usuario.email,
+            valor=email
+        )
