@@ -29,6 +29,46 @@ from app.domains.users.repository import (
 )
 
 
+PROFESSIONAL_ROLES = {UserRole.ADMIN, UserRole.MEDICO}
+
+
+def validate_professional_profile(role: UserRole, payload: dict) -> None:
+    """Valida os campos profissionais exigidos para perfis médicos e admins."""
+
+    if role not in PROFESSIONAL_ROLES:
+        return
+
+    required_fields = (
+        "registro_profissional",
+        "especialidade_principal",
+        "instituicao",
+        "universidade",
+        "ano_formacao",
+        "residencia_medica",
+    )
+    missing_fields = [field_name for field_name in required_fields if payload.get(field_name) in (None, "")]
+
+    if not payload.get("especializacoes"):
+        missing_fields.append("especializacoes")
+
+    if missing_fields:
+        fields = ", ".join(missing_fields)
+        raise HTTPException(
+            status_code=400,
+            detail=f"Campos profissionais obrigatórios para a role '{role}': {fields}"
+        )
+
+
+def can_bootstrap_superuser(session: Session, role: UserRole, user_atual: Usuario | None) -> bool:
+    """Permite criar o primeiro superusuário durante a inicialização da aplicação."""
+
+    if role != UserRole.SUPERUSER or user_atual is not None:
+        return False
+
+    existing_superuser = session.query(Usuario).filter_by(role=UserRole.SUPERUSER).first()
+    return existing_superuser is None
+
+
 def create_user_service(
         session: Session,
         nome: str,
@@ -36,7 +76,15 @@ def create_user_service(
         email: str,
         senha: str,
         role: UserRole,
-        usuer_atual: Usuario | None = None
+        registro_profissional: str | None = None,
+        especialidade_principal: str | None = None,
+        instituicao: str | None = None,
+        universidade: str | None = None,
+        ano_formacao: int | None = None,
+        residencia_medica: str | None = None,
+        especializacoes: list[str] | None = None,
+        usuer_atual: Usuario | None = None,
+        allow_superuser_bootstrap: bool = False,
 ):
     """ Service Create Usuário """
 
@@ -46,13 +94,33 @@ def create_user_service(
 
     hashed_senha = get_password_hash(senha)  ## Função de app/core/security.py para criar senha com hash
 
+    validate_professional_profile(
+        role=role,
+        payload={
+            "registro_profissional": registro_profissional,
+            "especialidade_principal": especialidade_principal,
+            "instituicao": instituicao,
+            "universidade": universidade,
+            "ano_formacao": ano_formacao,
+            "residencia_medica": residencia_medica,
+            "especializacoes": especializacoes or [],
+        }
+    )
+
     # Criação de objeto Usuario com os dados vindos dos parametros de entrada da função
     user = Usuario(
         email=email,
         senha=hashed_senha,
         nome=nome,
         telefone=telefone,
-        role=role
+        role=role,
+        registro_profissional=registro_profissional,
+        especialidade_principal=especialidade_principal,
+        instituicao=instituicao,
+        universidade=universidade,
+        ano_formacao=ano_formacao,
+        residencia_medica=residencia_medica,
+        especializacoes=especializacoes or [],
     )
 
     # Garantindo do banco o 'usario_id' por ser autoincrement
@@ -60,6 +128,9 @@ def create_user_service(
 
     #  Regra de permissão de criacão
     if role in {UserRole.ADMIN, UserRole.SUPERUSER}:  ## Se quem tentar criar um 'admin' ou um 'superuser' e não tiver esses roles ou não for um 'Usuario' não tem permissão
+        if allow_superuser_bootstrap and can_bootstrap_superuser(session, role, usuer_atual):
+            return create_user_in_db(session, user)
+
         if not usuer_atual or usuer_atual.role != UserRole.SUPERUSER:  ## Essa verificação só é feita no service caso ele seja importado e outro dev esquecer de usar função exigir_role()
             raise HTTPException(
                 status_code=401,
@@ -183,8 +254,22 @@ def update_user_service(
     if user_up.senha:
         user_up.senha = get_password_hash(user_up.senha)
 
+    update_data = user_up.model_dump(exclude_unset=True)
+    final_role = update_data.get("role", user.role)
+    merged_payload = {
+        "registro_profissional": update_data.get("registro_profissional", user.registro_profissional),
+        "especialidade_principal": update_data.get("especialidade_principal", user.especialidade_principal),
+        "instituicao": update_data.get("instituicao", user.instituicao),
+        "universidade": update_data.get("universidade", user.universidade),
+        "ano_formacao": update_data.get("ano_formacao", user.ano_formacao),
+        "residencia_medica": update_data.get("residencia_medica", user.residencia_medica),
+        "especializacoes": update_data.get("especializacoes", user.especializacoes or []),
+    }
+
+    validate_professional_profile(role=final_role, payload=merged_payload)
+
     # Atualização dos dados
-    for chave, valor in user_up.dict(exclude_unset=True).items():
+    for chave, valor in update_data.items():
         setattr(user, chave, valor)
 
     return update_user_in_db(session, user)
