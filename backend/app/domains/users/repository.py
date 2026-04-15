@@ -19,7 +19,7 @@ class UsuarioRepository(BaseRepository):
     def get_by_email(self, session: Session, email: str):
         """ Método para consultar por 'email' (Reutilizando get_by_campo como o campo sendo 'email') """
 
-        return self.get_by_campo(
+        return self.get_one_by_campo(
             session=session,
             campo=Usuario.email,
             valor=email

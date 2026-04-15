@@ -14,6 +14,24 @@ class BaseRepository:
         self.model = model
         self.campo_id = campo_id
 
+    def get_or_not_found(
+            self,
+            session: Session,
+            campo: InstrumentedAttribute,
+            valor: Any,
+            exception: Exception
+    ):
+        """ Método que retorna se um model existe por uma consulta no campo baseado no valor passado se não lança 404 ('id', por exemplo) """
+
+        obj_output = self.get_one_by_campo(session=session, campo=campo, valor=valor)
+
+        # Se não houver o model no banco, lança exception que pode ser alterada aqui por parâmetro
+        if not obj_output:
+            raise exception
+
+        # Retorna dado caso encontre
+        return obj_output
+
     def get_by_id(self, session: Session, obj_id: int):
         """ Método base para consultar models por 'id' (retorna um apenas)"""
 
@@ -35,6 +53,16 @@ class BaseRepository:
         """ Método base para retornar models por campo da tabela (retorna todos os dados) """
 
         return session.query(_entity=self.model).filter(campo == valor).all()
+
+    def get_one_by_campo(
+            self,
+            session: Session,
+            campo: InstrumentedAttribute,
+            valor: Any
+    ):
+        """ Método que retorna apenas um dado pelo campo consultado """
+
+        return session.query(self.model).filter(campo == valor).first()
 
     def get_by_ids(self, session: Session, ids: list[int]):
         """ Método que retorna Models por 'ids' (Retorna somente os que existem na consulta) """
@@ -71,21 +99,27 @@ class BaseRepository:
 
         return registros
 
-    def create(self, session: Session, obj_input: dict) -> Any:
+    def create(self, session: Session, obj_input):
         """ Método para instânciar model no banco de dados """
 
-        db_obj_model = self.model(**obj_input)  # Cria o obj do modelo usando os dados de entrada a linha '**obj_input' desempacota o dicionário
+        # Cria o obj do modelo usando os dados de entrada
+        db_obj_model = self.model(obj_input)
 
         session.add(instance=db_obj_model)
         session.flush()
 
         return db_obj_model
 
-    def delete(self, session: Session, obj_model):
-        """ Método para deletar Model"""
-        session.delete(instance=obj_model)
+    def update(self, session: Session, obj_input):
+        """ Método para instânciar model no banco de dados """
 
-        return obj_model
+        # Cria o obj do modelo usando os dados de entrada
+        db_obj_model = self.model(obj_input)
+
+        session.add(instance=db_obj_model)
+        session.flush()
+
+        return db_obj_model
 
     def create_com_relacoes(
             self,
@@ -105,4 +139,10 @@ class BaseRepository:
         session.flush()
 
         return db_obj
+
+    def delete(self, session: Session, obj_model):
+        """ Método para deletar Model"""
+        session.delete(instance=obj_model)
+
+        return obj_model
 
