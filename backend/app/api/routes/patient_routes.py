@@ -326,6 +326,11 @@ def delete_patient_history(
     summary="Listar exames do paciente",
     description="Retorna os exames registrados para o paciente. Acesso exclusivo de médico.",
     response_description="Exames do paciente retornados com sucesso.",
+    responses={
+        401: {"description": "Usuário não autenticado."},
+        403: {"description": "Usuário sem permissão para acessar os exames do paciente."},
+        404: {"description": "Paciente não encontrado."},
+    },
 )
 def read_patient_exams(
     user_atual: RoleMedico,
@@ -341,6 +346,12 @@ def read_patient_exams(
     summary="Adicionar exame ao paciente",
     description="Cria um novo registro de exame para o paciente. Acesso exclusivo de médico.",
     response_description="Exame do paciente criado com sucesso.",
+    responses={
+        400: {"description": "Erro ao criar o exame do paciente."},
+        401: {"description": "Usuário não autenticado."},
+        403: {"description": "Usuário sem permissão para criar exame do paciente."},
+        404: {"description": "Paciente não encontrado."},
+    },
 )
 def create_patient_exam(
     exam_in: PacienteExameCreate,
@@ -364,6 +375,11 @@ def create_patient_exam(
     summary="Consultar exame do paciente",
     description="Retorna um exame específico do paciente. Acesso exclusivo de médico.",
     response_description="Exame do paciente retornado com sucesso.",
+    responses={
+        401: {"description": "Usuário não autenticado."},
+        403: {"description": "Usuário sem permissão para acessar o exame do paciente."},
+        404: {"description": "Paciente ou exame do paciente não encontrado."},
+    },
 )
 def read_patient_exam(
     user_atual: RoleMedico,
@@ -380,6 +396,12 @@ def read_patient_exam(
     summary="Atualizar exame do paciente",
     description="Atualiza um exame registrado para o paciente. Acesso exclusivo de médico.",
     response_description="Exame do paciente atualizado com sucesso.",
+    responses={
+        400: {"description": "Erro ao atualizar o exame do paciente."},
+        401: {"description": "Usuário não autenticado."},
+        403: {"description": "Usuário sem permissão para atualizar o exame do paciente."},
+        404: {"description": "Paciente ou exame do paciente não encontrado."},
+    },
 )
 def update_patient_exam(
     exam_in: PacienteExameUpdate,
@@ -403,7 +425,13 @@ def update_patient_exam(
     status_code=204,
     summary="Excluir exame do paciente",
     description="Remove um exame registrado para o paciente. Acesso exclusivo de médico.",
-    responses={204: {"description": "Exame do paciente removido com sucesso."}},
+    responses={
+        204: {"description": "Exame do paciente removido com sucesso."},
+        400: {"description": "Erro ao excluir o exame do paciente."},
+        401: {"description": "Usuário não autenticado."},
+        403: {"description": "Usuário sem permissão para excluir o exame do paciente."},
+        404: {"description": "Paciente ou exame do paciente não encontrado."},
+    },
 )
 def delete_patient_exam(
     user_atual: RoleMedico,
@@ -425,6 +453,11 @@ def delete_patient_exam(
     summary="Listar medicamentos do paciente",
     description="Retorna os medicamentos registrados para o paciente. Acesso exclusivo de médico.",
     response_description="Medicamentos do paciente retornados com sucesso.",
+    responses={
+        401: {"description": "Usuário não autenticado."},
+        403: {"description": "Usuário sem permissão para acessar os medicamentos do paciente."},
+        404: {"description": "Paciente não encontrado."},
+    },
 )
 def read_patient_medications(
     user_atual: RoleMedico,
@@ -440,6 +473,12 @@ def read_patient_medications(
     summary="Adicionar medicamento ao paciente",
     description="Cria um novo registro de medicamento para o paciente. Acesso exclusivo de médico.",
     response_description="Medicamento do paciente criado com sucesso.",
+    responses={
+        400: {"description": "Erro ao criar o medicamento do paciente."},
+        401: {"description": "Usuário não autenticado."},
+        403: {"description": "Usuário sem permissão para criar medicamento do paciente."},
+        404: {"description": "Paciente não encontrado."},
+    },
 )
 def create_patient_medication(
     medication_in: PacienteMedicamentoCreate,
@@ -463,6 +502,11 @@ def create_patient_medication(
     summary="Consultar medicamento do paciente",
     description="Retorna um medicamento específico do paciente. Acesso exclusivo de médico.",
     response_description="Medicamento do paciente retornado com sucesso.",
+    responses={
+        401: {"description": "Usuário não autenticado."},
+        403: {"description": "Usuário sem permissão para acessar o medicamento do paciente."},
+        404: {"description": "Paciente ou medicamento do paciente não encontrado."},
+    },
 )
 def read_patient_medication(
     user_atual: RoleMedico,
@@ -479,6 +523,12 @@ def read_patient_medication(
     summary="Atualizar medicamento do paciente",
     description="Atualiza um medicamento registrado para o paciente. Acesso exclusivo de médico.",
     response_description="Medicamento do paciente atualizado com sucesso.",
+    responses={
+        400: {"description": "Erro ao atualizar o medicamento do paciente."},
+        401: {"description": "Usuário não autenticado."},
+        403: {"description": "Usuário sem permissão para atualizar o medicamento do paciente."},
+        404: {"description": "Paciente ou medicamento do paciente não encontrado."},
+    },
 )
 def update_patient_medication(
     medication_in: PacienteMedicamentoUpdate,
@@ -507,7 +557,13 @@ def update_patient_medication(
     status_code=204,
     summary="Excluir medicamento do paciente",
     description="Remove um medicamento registrado para o paciente. Acesso exclusivo de médico.",
-    responses={204: {"description": "Medicamento do paciente removido com sucesso."}},
+    responses={
+        204: {"description": "Medicamento do paciente removido com sucesso."},
+        400: {"description": "Erro ao excluir o medicamento do paciente."},
+        401: {"description": "Usuário não autenticado."},
+        403: {"description": "Usuário sem permissão para excluir o medicamento do paciente."},
+        404: {"description": "Paciente ou medicamento do paciente não encontrado."},
+    },
 )
 def delete_patient_medication(
     user_atual: RoleMedico,
