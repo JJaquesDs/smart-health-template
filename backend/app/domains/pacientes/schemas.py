@@ -136,6 +136,7 @@ class PacienteExameBase(BaseModel):
     descricao: Optional[str] = None
     observacoes: Optional[str] = None
     pdf_nome: Optional[str] = None
+    pdf_url: Optional[str] = None
 
 
 class PacienteExameCreate(PacienteExameBase):
@@ -150,6 +151,7 @@ class PacienteExameUpdate(BaseModel):
     descricao: Optional[str] = None
     observacoes: Optional[str] = None
     pdf_nome: Optional[str] = None
+    pdf_url: Optional[str] = None
 
     class Config:
         from_attributes = True

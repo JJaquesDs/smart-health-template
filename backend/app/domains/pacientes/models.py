@@ -71,6 +71,7 @@ class PacienteExame(Base):
     descricao = Column(Text, nullable=True)
     observacoes = Column(Text, nullable=True)
     pdf_nome = Column(String(255), nullable=True)
+    pdf_url = Column(Text, nullable=True)
 
     paciente = relationship("Paciente", back_populates="exames_registrados")
 
