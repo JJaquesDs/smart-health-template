@@ -1,5 +1,7 @@
-from pydantic import BaseModel
-from typing import Optional
+from decimal import Decimal
+from typing import Literal, Optional
+
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.domains.medicamentos.schemas import MedicamentosPublic
 
@@ -89,4 +91,37 @@ class ExamesClinicosGet(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+ExameCategoria = Literal["laboratorial", "imagem", "funcional", "outros"]
+
+
+class ExameCatalogoBase(BaseModel):
+    nome: str = Field(min_length=1, max_length=120)
+    categoria: ExameCategoria
+    descricao: str = Field(min_length=1)
+    preco: Decimal = Field(ge=0)
+    preparacao: Optional[str] = None
+    observacoes: Optional[str] = None
+    ativo: bool = True
+
+
+class ExameCatalogoCreate(ExameCatalogoBase):
+    pass
+
+
+class ExameCatalogoUpdate(BaseModel):
+    nome: Optional[str] = Field(default=None, min_length=1, max_length=120)
+    categoria: Optional[ExameCategoria] = None
+    descricao: Optional[str] = Field(default=None, min_length=1)
+    preco: Optional[Decimal] = Field(default=None, ge=0)
+    preparacao: Optional[str] = None
+    observacoes: Optional[str] = None
+    ativo: Optional[bool] = None
+
+
+class ExameCatalogoPublic(ExameCatalogoBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    exame_id: int
 
