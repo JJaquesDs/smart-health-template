@@ -44,11 +44,11 @@ class ExameImagemPublic(BaseModel):
 
     exame_id: int
     tipo: str
-    descricao: str
-    link_imagem: str
+    descricao: str | None = None
+    link_imagem: str | None = None
 
-    medicamento: MedicamentosPublic
-    upload_imagem: UploadExameImagemPublic
+    medicamento: list[MedicamentosPublic] = []
+    upload_imagem: list[UploadExameImagemPublic] = []
 
     class Config:
         from_attributes = True
@@ -57,3 +57,7 @@ class ExameImagemPublic(BaseModel):
 class ExameImagemCreate(ExameImagemBase):
     pass
 
+
+class ExameComUploadResponse(BaseModel):
+    exame: ExameImagemPublic
+    upload: UploadExameImagemPublic

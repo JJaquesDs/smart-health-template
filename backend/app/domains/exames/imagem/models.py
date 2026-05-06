@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, JSON, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 
 from datetime import datetime
@@ -40,10 +40,17 @@ class ResultadoExameImagemIa(Base):
     __tablename__ = 'resultados_exame_imagem_ia'
 
     resultado_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    risco = Column(Float, nullable=False)
+    classe_predita = Column(String(100), nullable=False)
+    confianca = Column(Float, nullable=False)
+
+    probabilidades = Column(JSON, nullable=False)
+
+    interpretacao = Column(String(255), nullable=True)
+
     data_analise = Column(DateTime, default=datetime.utcnow)
 
-    exame_imagem_id = Column(Integer, ForeignKey('exames_imagem.exame_id', ondelete="CASCADE"))             #  Relacionando o resultado da análise do exame de imagem com a imagem
-    exame_imagem = relationship("ExameImagem", back_populates="resultados")    #  Relacionando Resultados com exames de imagem
+    #  Relacionando o resultado da análise do exame de imagem com a imagem
+    exame_imagem_id = Column(Integer, ForeignKey('exames_imagem.exame_id', ondelete="CASCADE"))
 
-    #  Ela ainda n tem schemas ou classe pública, pois não possui dados sensíveis como senhas
+    #  Relacionando Resultados com exames de imagem
+    exame_imagem = relationship("ExameImagem", back_populates="resultados")

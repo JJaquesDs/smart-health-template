@@ -29,23 +29,24 @@ def create_admin(
                 detail="A rota de admin aceita apenas usuários com role ADMIN"
             )
 
-        with session.begin():
-            return create_user_service(
-                session=session,
-                nome=admin_novo.nome,
-                telefone=admin_novo.telefone,
-                email=admin_novo.email,
-                senha=admin_novo.senha,
-                role=admin_novo.role,
-                registro_profissional=admin_novo.registro_profissional,
-                especialidade_principal=admin_novo.especialidade_principal,
-                instituicao=admin_novo.instituicao,
-                universidade=admin_novo.universidade,
-                ano_formacao=admin_novo.ano_formacao,
-                residencia_medica=admin_novo.residencia_medica,
-                especializacoes=admin_novo.especializacoes,
-                usuer_atual=user_atual
-            )
+        session.flush()
+
+        return create_user_service(
+            session=session,
+            nome=admin_novo.nome,
+            telefone=admin_novo.telefone,
+            email=admin_novo.email,
+            senha=admin_novo.senha,
+            role=admin_novo.role,
+            registro_profissional=admin_novo.registro_profissional,
+            especialidade_principal=admin_novo.especialidade_principal,
+            instituicao=admin_novo.instituicao,
+            universidade=admin_novo.universidade,
+            ano_formacao=admin_novo.ano_formacao,
+            residencia_medica=admin_novo.residencia_medica,
+            especializacoes=admin_novo.especializacoes,
+            usuer_atual=user_atual
+        )
     except IntegrityError:
         raise HTTPException(
             status_code=400,
