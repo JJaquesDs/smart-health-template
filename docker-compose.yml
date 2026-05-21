@@ -2,6 +2,8 @@ services:
 
   db:
     image: postgres:17
+    ports:
+      - "5433:5432"
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
@@ -43,7 +45,7 @@ services:
       - traefik.http.services.${STACK_NAME?Variable not set}-adminer.loadbalancer.server.port=8080
 
   prestart:
-    image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
+    image: backend-prestart:latest
     build:
       context: ./backend
     networks:
@@ -78,6 +80,8 @@ services:
   backend:
     image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
     restart: always
+    volumes:
+      - ./backend/uploads:/app/uploads
     networks:
       - traefik-public
       - default
@@ -162,6 +166,24 @@ services:
 
       # Enable redirection for HTTP and HTTPS
       - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.middlewares=https-redirect
+
+  redis:
+    image: redis:7
+    restart: always
+    ports:
+      - "6379:6379"
+
+  worker:
+    volumes:
+      - ./backend/uploads:/app/uploads
+    build:
+      context: ./ia_service
+    command: uv run celery -A app.core.worker.celery_app worker --loglevel=info --pool=solo
+    depends_on:
+      - redis
+    networks:
+      - default
+
 volumes:
   app-db-data:
 

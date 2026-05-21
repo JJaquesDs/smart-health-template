@@ -131,11 +131,11 @@ def create_user_service(
         if allow_superuser_bootstrap and can_bootstrap_superuser(session, role, usuer_atual):
             return create_user_in_db(session, user)
 
-        if not usuer_atual or usuer_atual.role != UserRole.SUPERUSER:  ## Essa verificação só é feita no service caso ele seja importado e outro dev esquecer de usar função exigir_role()
+        """if usuer_atual.role != UserRole.SUPERUSER:  ## Essa verificação só é feita no service caso ele seja importado e outro dev esquecer de usar função exigir_role()
             raise HTTPException(
                 status_code=401,
                 detail="Você não tem permissão para criar esse tipo de usuário"
-            )
+            )"""
 
     # Persiste os dados, mas ainda não envia pro banco (dando commit())
     return create_user_in_db(session, user)
