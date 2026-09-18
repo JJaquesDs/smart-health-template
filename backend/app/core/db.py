@@ -33,5 +33,5 @@ def init_db(session: Session) -> None:
             role=UserRole.SUPERUSER,
             allow_superuser_bootstrap=True
         )
-
+        session.commit()
 

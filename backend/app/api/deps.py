@@ -11,7 +11,6 @@ from app.domains.users.enums import UserRole
 
 from app.domains.users.services import get_current_user_service
 
-from app.domains.users.repository import UsuarioRepository
 from app.domains.professionals.medico.repository import MedicoRepository
 from app.domains.professionals.secretaria.repository import SecretariaRepository
 from app.domains.professionals.medico.medico_esp.repository import MedicoEspRepository
@@ -19,12 +18,6 @@ from app.domains.professionals.medico.especialidade.repository import Especialid
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")   #muda aqui
-
-
-def get_user_repo():
-    """ Função para injetar dependência de Repositório """
-
-    return UsuarioRepository()
 
 
 def get_secretaria_repo():
@@ -74,5 +67,4 @@ def exigir_role(roles: list[UserRole]):
 
         return usuario_atual  # Retorna usuario atual ou excessão para a função 'exigir_role()'
     return checar             # Que retorna a o dado de 'checar()'
-
 

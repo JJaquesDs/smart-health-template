@@ -19,7 +19,7 @@ depends_on = None
 
 def upgrade():
     # 1. Remover FK antiga
-    op.drop_constraint('medicos_area_id_fkey', 'medicos', type_='foreignkey')
+    op.drop_constraint('medicos_esp_id_fkey', 'medicos', type_='foreignkey')
 
     # 2. Remover coluna antiga
     op.drop_column('medicos', 'esp_id')
