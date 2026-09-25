@@ -5,7 +5,7 @@ from app.domains.medicamentos.schemas import MedicamentosPublic
 
 
 class UploadExameImagemBase(BaseModel):
-    """ Classe base"""
+    """Classe base"""
 
     titulo: str
     caminho_upload: str
@@ -14,7 +14,7 @@ class UploadExameImagemBase(BaseModel):
 
 
 class UploadExameImagemPublic(BaseModel):
-    """ Classe publica """
+    """Classe publica"""
 
     upload_id: int
 
@@ -32,7 +32,7 @@ class UploadExameImagemCreate(UploadExameImagemBase):
 
 
 class ExameImagemBase(BaseModel):
-    """ Classe base de Imagens """
+    """Classe base de Imagens"""
 
     tipo: str
     descricao: str
@@ -40,9 +40,11 @@ class ExameImagemBase(BaseModel):
 
 
 class ExameImagemPublic(BaseModel):
-    """ Classe publica """
+    """Classe publica"""
 
     exame_id: int
+    task_id: str | None = None
+    paciente_id: int | None = None
     tipo: str
     descricao: str | None = None
     link_imagem: str | None = None

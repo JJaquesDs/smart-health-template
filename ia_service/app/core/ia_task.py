@@ -1,56 +1,43 @@
 import json
+from pathlib import Path
 import numpy as np
 from PIL import Image
-
-from app.core.model_loader import model
+from app.core.model_loader import model, MODEL_DIR
 from app.core.worker import celery_app
 
-
-# Carregando os rótulos das classes
-with open("lm/classes.json") as classes:
-    classes_indices = json.load(classes)
-
-# Invertendo os índices para classes (EX: 0 - Disceratoticas)
-idx_to_class = {
-    valor: chave for chave, valor in classes_indices.items()
-}
+with (MODEL_DIR / 'classes.json').open() as source:
+    class_indices = json.load(source)
+classes = [name for name, index in sorted(class_indices.items(), key=lambda item: item[1])]
+if sorted(class_indices.values()) != list(range(len(classes))):
+    raise RuntimeError('Índices de classes inválidos')
 
 
-@celery_app.task(name="process_image")
+@celery_app.task(name='process_image', track_started=True)
 def processamento_imagem(image_path: str, exame_id: int):
-
-    print("1 - entrou na task")
-    print("Modelo carregado OK")
-
-    image = Image.open(image_path).convert("RGB")
-    print("2 - imagem aberta")
-
-    image = image.resize((244, 244))
-    print("3 - resize feito")
-
-    img = np.array(image) / 255.0
-    img = np.expand_dims(img, axis=0)
-    print("4 - preprocess feito")
-
-    print("5 - entrando no predict")
-
-    pred = model.predict(img)
-
-    # Pegando o índice de maior valor (maior confiança na predição)
-    predicted_idx = int(np.argmax(pred))
-
-    # Puxando a classe que foi predita
-    predicted_classes = idx_to_class[predicted_idx]
-
-    # Pegando o float de maior valor (mais confiabilidade de predição da IA)
-    confianca = float(np.max(pred))
-
-    print("Classe:", predicted_classes)
-    print("Confiança:", confianca)
-
+    uploads = Path('/app/uploads').resolve()
+    path = Path(image_path).resolve()
+    if path.parent != uploads or not path.is_file():
+        raise ValueError('Imagem não encontrada no diretório de uploads')
+    shape = model.input_shape
+    if len(shape) != 4 or shape[-1] != 3:
+        raise ValueError('Formato de entrada incompatível')
+    with Image.open(path) as source:
+        if source.format not in {'JPEG', 'PNG'}:
+            raise ValueError('Envie uma imagem JPEG ou PNG')
+        if source.width * source.height > 40_000_000:
+            raise ValueError('Imagem excede o limite de resolução')
+        # Mantém o pré-processamento do projeto: RGB e pixels divididos por 255.
+        image = source.convert('RGB').resize((shape[2] or 244, shape[1] or 244))
+        batch = np.expand_dims(np.asarray(image, dtype=np.float32) / 255.0, 0)
+    probabilities = np.asarray(model.predict(batch, verbose=0))[0]
+    if probabilities.shape != (len(classes),) or not np.isfinite(probabilities).all():
+        raise ValueError('Saída do modelo não corresponde às classes configuradas')
+    if (probabilities < 0).any() or (probabilities > 1).any():
+        raise ValueError('Saída do modelo não contém probabilidades válidas')
     return {
-        "exame_img_id": exame_id,
-        "classe": predicted_classes,
-        "confianca": confianca,
-        "lista": pred.tolist(),
+        'exame_img_id': exame_id,
+        'classe': classes[int(np.argmax(probabilities))],
+        'confianca': float(np.max(probabilities)),
+        'lista': probabilities.reshape(1, -1).tolist(),
+        'probabilidades': dict(zip(classes, map(float, probabilities))),
     }

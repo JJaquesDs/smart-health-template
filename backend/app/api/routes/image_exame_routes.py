@@ -1,124 +1,143 @@
-import os
+from pathlib import Path
+from uuid import uuid4
 
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Form
-
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
-
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
 
 from app.api.deps import exigir_role, get_session
-
 from app.core.celery_client import celery_app
-
-from app.domains.exames.imagem.schemas import (
-    ExameImagemCreate,
-    ExameImagemPublic,
-    UploadExameImagemCreate,
-    UploadExameImagemPublic,
-    ExameComUploadResponse
+from app.domains.exames.imagem.models import (
+    ExameImagem,
+    UploadExameImagem,
 )
-
+from app.domains.exames.imagem.schemas import ExameImagemPublic
 from app.domains.exames.imagem.service import (
+    UPLOAD_DIR,
     create_exam_with_upload,
-    save_result_analise_service
+    save_result_analise_service,
+    serialize_result,
 )
-
-from app.domains.exames.imagem.repository import get_exame_image
-
+from app.domains.pacientes.models import Paciente
 from app.domains.users.enums import UserRole
 from app.domains.users.models import Usuario
 
-
 router = APIRouter(prefix="/exame_imagem", tags=["Exames_Imagem"])
+access = exigir_role([UserRole.SUPERUSER, UserRole.MEDICO])
 
 
-@router.post(
-    path="/",
-    response_model=ExameImagemPublic,
-    summary="Criar um Exame de imagem com Upload"
-)
+def authorize(exame, user):
+    if not exame:
+        raise HTTPException(404, "Exame não encontrado")
+    if user.role != UserRole.SUPERUSER and exame.usuario_id != user.usuario_id:
+        raise HTTPException(403, "Sem permissão para acessar este exame")
+
+
+@router.post("/", response_model=ExameImagemPublic)
 def create_image_exam(
-        file: UploadFile = File(...),
-        tipo: str = Form("citologia"),
-        descricao: str | None = Form(None),
-        session: Session = Depends(get_session),
-        user_atual: Usuario = Depends(exigir_role([UserRole.SUPERUSER, UserRole.MEDICO]))
+    file: UploadFile = File(...),
+    tipo: str = Form("citologia"),
+    descricao: str | None = Form(None),
+    paciente_id: int | None = Form(None),
+    session: Session = Depends(get_session),
+    user_atual: Usuario = Depends(access),
 ):
-    """ Rota para salvar um exame de imagem"""
-
+    if tipo != "citologia":
+        raise HTTPException(422, "Este modelo aceita exames de citologia")
+    if descricao and len(descricao) > 2000:
+        raise HTTPException(422, "Descrição deve ter no máximo 2000 caracteres")
+    if paciente_id is not None and not session.get(Paciente, paciente_id):
+        raise HTTPException(404, "Paciente não encontrado")
+    exame, upload = create_exam_with_upload(
+        session, file, tipo, descricao, user_atual.usuario_id, paciente_id
+    )
     try:
-        exame, upload = create_exam_with_upload(session=session, file=file, tipo=tipo, descricao=descricao)
-
         session.commit()
-
-        return exame
-
-    except IntegrityError:
+    except Exception:
         session.rollback()
-        raise HTTPException(status_code=400, detail="Erro ao criar exame")
+        Path(upload.caminho_upload).unlink(missing_ok=True)
+        raise
+    return exame
+
+
+@router.get("/")
+def history(session: Session = Depends(get_session), user: Usuario = Depends(access)):
+    query = session.query(ExameImagem)
+    if user.role != UserRole.SUPERUSER:
+        query = query.filter(ExameImagem.usuario_id == user.usuario_id)
+    return [
+        {
+            "exame_id": e.exame_id,
+            "tipo": e.tipo,
+            "descricao": e.descricao,
+            "task_id": e.task_id,
+            "paciente_id": e.paciente_id,
+            "arquivo": e.upload_imagem[0].titulo if e.upload_imagem else "",
+            "resultado": serialize_result(e.resultados[0]) if e.resultados else None,
+        }
+        for e in query.order_by(ExameImagem.exame_id.desc()).limit(30)
+    ]
 
 
 @router.get("/uploads/{file_name}")
 def get_uploads(
-        file_name: str,
-        user: Usuario = Depends(exigir_role(roles=[
-            UserRole.SUPERUSER, UserRole.ADMIN, UserRole.MEDICO])
-        ),
-        session: Session = Depends(get_session)
+    file_name: str,
+    session: Session = Depends(get_session),
+    user: Usuario = Depends(access),
 ):
-    """ Rota para vizualizar os exames de imagem """
-
-    caminho = os.path.join("uploads", file_name)
-
-    if not os.path.exists(caminho):
-        raise HTTPException(status_code=404, detail="Arquivo não encontrado")
-
-    return FileResponse(caminho)
+    path = UPLOAD_DIR / file_name
+    if path.resolve().parent != UPLOAD_DIR.resolve():
+        raise HTTPException(404, "Arquivo não encontrado")
+    upload = (
+        session.query(UploadExameImagem).filter_by(caminho_upload=str(path)).first()
+    )
+    authorize(upload.exames_imagem if upload else None, user)
+    if not path.is_file():
+        raise HTTPException(404, "Arquivo não encontrado")
+    return FileResponse(path)
 
 
 @router.post("/{exame_id}/analisar")
 def analisar_exame(
-        exame_id: int,
-        session: Session = Depends(get_session)
+    exame_id: int,
+    reiniciar: bool = False,
+    session: Session = Depends(get_session),
+    user: Usuario = Depends(access),
 ):
-    """ Rota para analisar imagens """
-
-    exame = get_exame_image(
-        session=session,
-        exame_id=exame_id
+    exame = (
+        session.query(ExameImagem)
+        .filter_by(exame_id=exame_id)
+        .with_for_update()
+        .first()
     )
-
-    if not exame:
-        raise HTTPException(
-            status_code=404,
-            detail="Exame não encontrado"
+    authorize(exame, user)
+    if not exame.upload_imagem:
+        raise HTTPException(422, "Exame não possui imagem")
+    if exame.task_id and (not reiniciar or exame.resultados):
+        return {"msg": "Análise já solicitada", "task_id": exame.task_id}
+    task_id = str(uuid4())
+    try:
+        celery_app.send_task(
+            "process_image",
+            args=[exame.upload_imagem[0].caminho_upload, exame_id],
+            task_id=task_id,
+            retry=False,
         )
-
-    upload = exame.upload_imagem[0]
-    caminho = upload.caminho_upload
-
-    # task celery (enviando para process_image)
-    task = celery_app.send_task(
-        "process_image",
-        args=[caminho, exame_id]
-    )
-
-    return {
-        "msg": "Analise iniciada",
-        "task_id": task.id
-    }
+    except Exception:
+        raise HTTPException(
+            503, "Não foi possível iniciar a análise. Verifique Redis e worker."
+        )
+    exame.task_id = task_id
+    session.commit()
+    return {"msg": "Análise iniciada", "task_id": task_id}
 
 
 @router.get("/resultado/{task_id}")
 def pegar_resultado_analise(
-        task_id: str,
-        session: Session = Depends(get_session)
+    task_id: str,
+    session: Session = Depends(get_session),
+    user: Usuario = Depends(access),
 ):
-    resultado = save_result_analise_service(
-        task_id=task_id,
-        session=session,
-        interpretacao=None
-    )
-
-    return resultado
+    exame = session.query(ExameImagem).filter_by(task_id=task_id).first()
+    authorize(exame, user)
+    return save_result_analise_service(task_id, session)
