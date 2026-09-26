@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, Column, ForeignKey, Integer, String, Text, text
 from sqlalchemy.orm import relationship
 
 from app.core.connection import Base
@@ -8,6 +8,9 @@ class Paciente(Base):
     __tablename__ = "pacientes"
 
     paciente_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    created_at = Column(DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"), nullable=True)
+    updated_at = Column(DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"), nullable=True)
+    status = Column(String(8), server_default="active", nullable=False)
     nome = Column(String(255), nullable=False)
     cpf = Column(String(45), nullable=False, unique=True)
     data_nascimento = Column(String(10), nullable=False)

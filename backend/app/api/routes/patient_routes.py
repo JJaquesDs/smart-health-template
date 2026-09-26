@@ -47,11 +47,11 @@ router = APIRouter(prefix="/pacientes", tags=["pacientes"])
 
 RoleProtegida = Annotated[
     Usuario,
-    Depends(exigir_role([UserRole.MEDICO, UserRole.SECRETARIA])),
+    Depends(exigir_role([UserRole.MEDICO, UserRole.SECRETARIA, UserRole.SUPERUSER])),
 ]
 RoleMedico = Annotated[
     Usuario,
-    Depends(exigir_role([UserRole.MEDICO])),
+    Depends(exigir_role([UserRole.MEDICO, UserRole.SUPERUSER])),
 ]
 
 

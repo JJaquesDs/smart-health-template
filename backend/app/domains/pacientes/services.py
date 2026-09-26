@@ -44,7 +44,7 @@ DOCTOR_ONLY_FIELDS = {"medicamentos", "historico_medico", "observacoes"}
 
 
 def _validate_doctor_only_fields(user: Usuario, data: dict) -> None:
-    if user.role == UserRole.MEDICO:
+    if user.role in {UserRole.MEDICO, UserRole.SUPERUSER}:
         return
 
     forbidden_fields = [
@@ -77,6 +77,9 @@ def _validate_unique_fields(
 def serialize_patient_for_user(patient: Paciente, user: Usuario) -> dict:
     data = {
         "paciente_id": patient.paciente_id,
+        "created_at": patient.created_at,
+        "updated_at": patient.updated_at,
+        "status": patient.status,
         "nome": patient.nome,
         "cpf": patient.cpf,
         "data_nascimento": patient.data_nascimento,

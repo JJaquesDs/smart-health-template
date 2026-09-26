@@ -1,6 +1,59 @@
-from typing import Optional
+from datetime import datetime, date
+from typing import Optional, Literal
+import re
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
+
+
+def normalize_cpf(value: str) -> str:
+    if value is None:
+        raise ValueError("CPF não pode ser nulo")
+    value = value.strip()
+    if not re.fullmatch(r"(?:[0-9]{11}|[0-9]{3}\.[0-9]{3}\.[0-9]{3}-[0-9]{2})", value):
+        raise ValueError("CPF deve conter 11 dígitos ou usar o formato 000.000.000-00")
+    digits = re.sub(r"[^0-9]", "", value)
+    if len(set(digits)) == 1:
+        raise ValueError("CPF inválido")
+    for size in (9, 10):
+        check = (sum(int(digits[i]) * (size + 1 - i) for i in range(size)) * 10) % 11
+        if int(digits[size]) != (0 if check == 10 else check):
+            raise ValueError("CPF inválido: confira os dígitos verificadores")
+    return digits
+
+
+PATIENT_LIMITS = {
+    "nome": 255, "cpf": 45, "data_nascimento": 10, "genero": 45,
+    "email": 45, "telefone": 45, "rua": 255, "numero": 45,
+    "complemento": 255, "cidade": 120, "estado": 45, "cep": 20,
+    "tipo_sanguineo": 10, "ultimo_exame": 255,
+    "contato_emergencia_nome": 255, "contato_emergencia_parentesco": 120,
+    "contato_emergencia_telefone": 45,
+}
+REQUIRED_PATIENT_FIELDS = {"nome", "cpf", "data_nascimento", "genero", "email", "telefone"}
+
+
+class PatientInputValidation(BaseModel):
+    @field_validator("*", mode="before")
+    @classmethod
+    def validate_patient_field(cls, value, info):
+        name = info.field_name
+        if isinstance(value, str):
+            value = value.strip()
+        if name in REQUIRED_PATIENT_FIELDS and (value is None or value == ""):
+            raise ValueError(f"{name}: campo obrigatório")
+        limit = PATIENT_LIMITS.get(name)
+        if limit and isinstance(value, str) and len(value) > limit:
+            raise ValueError(f"{name}: máximo de {limit} caracteres")
+        if name == "data_nascimento":
+            try:
+                if not isinstance(value, str) or not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", value):
+                    raise ValueError()
+                birthday = date.fromisoformat(value)
+            except ValueError:
+                raise ValueError("Data de nascimento inválida; use AAAA-MM-DD")
+            if birthday > date.today():
+                raise ValueError("Data de nascimento não pode estar no futuro")
+        return value
 
 
 class PacienteBase(BaseModel):
@@ -28,11 +81,13 @@ class PacienteBase(BaseModel):
     contato_emergencia_telefone: Optional[str] = None
 
 
-class PacienteCreate(PacienteBase):
-    pass
+class PacienteCreate(PacienteBase, PatientInputValidation):
+    _validate_cpf = field_validator("cpf")(normalize_cpf)
 
 
-class PacienteUpdate(BaseModel):
+class PacienteUpdate(PatientInputValidation):
+    _validate_cpf = field_validator("cpf")(normalize_cpf)
+    status: Literal["active", "inactive"] = "active"
     nome: Optional[str] = None
     cpf: Optional[str] = None
     data_nascimento: Optional[str] = None
@@ -61,6 +116,9 @@ class PacienteUpdate(BaseModel):
 
 
 class PacientePublic(BaseModel):
+    created_at: datetime | None
+    updated_at: datetime | None
+    status: Literal["active", "inactive"]
     paciente_id: int
     nome: str
     cpf: str
