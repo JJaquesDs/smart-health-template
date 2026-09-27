@@ -19,3 +19,5 @@ api_router.include_router(exam_routes.router)
 api_router.include_router(image_exame_routes.router)
 api_router.include_router(medication_routes.router)
 api_router.include_router(patient_routes.router)
+from app.api.routes import dashboard_routes
+api_router.include_router(dashboard_routes.router)

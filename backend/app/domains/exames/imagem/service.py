@@ -65,6 +65,10 @@ def serialize_result(result):
         "status": "SUCCESS",
         "resultado_id": result.resultado_id,
         "exame_imagem_id": result.exame_imagem_id,
+        "paciente_id": result.exame_imagem.paciente_id,
+        "paciente_nome": result.exame_imagem.paciente.nome
+        if result.exame_imagem.paciente
+        else None,
         "classe_predita": result.classe_predita,
         "confianca": result.confianca,
         "probabilidades": result.probabilidades,

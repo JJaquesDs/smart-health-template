@@ -1,20 +1,31 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text
 from sqlalchemy.orm import relationship
 
 from app.core.connection import Base
 
 
 class Consulta(Base):
-    """ Model de Consultas """
+    """Model de Consultas"""
 
-    __tablename__ = 'consultas'
+    __tablename__ = "consultas"
 
     consulta_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    starts_at = Column(DateTime(timezone=True), nullable=True)
+    status = Column(String(10), nullable=False, server_default="waiting")
+    observacoes = Column(Text, nullable=True)
     data_consulta = Column(String(10), nullable=False)
 
-    medico_id = Column(Integer, ForeignKey('medicos.medico_id', ondelete="CASCADE"), nullable=False)
-    secretaria_id = Column(Integer, ForeignKey('secretarias.secretaria_id', ondelete="CASCADE"), nullable=False)
-    paciente_id = Column(Integer, ForeignKey('pacientes.paciente_id', ondelete="CASCADE"), nullable=False)
+    medico_id = Column(
+        Integer, ForeignKey("medicos.medico_id", ondelete="CASCADE"), nullable=False
+    )
+    secretaria_id = Column(
+        Integer,
+        ForeignKey("secretarias.secretaria_id", ondelete="CASCADE"),
+        nullable=True,
+    )
+    paciente_id = Column(
+        Integer, ForeignKey("pacientes.paciente_id", ondelete="CASCADE"), nullable=False
+    )
 
     # RELACIONAMENTOS
     medico = relationship("Medico", back_populates="consultas")

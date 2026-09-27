@@ -21,14 +21,14 @@ npm install
 npm run dev
 ```
 
-Configure `VITE_API_URL=http://localhost:8000` no frontend. Acesse a tela IA - Detecção com médico ou superusuário. Escolha um JPEG/PNG de até 10 MB e clique em Analisar imagem. O vínculo ao paciente é opcional; a lista de pacientes é oferecida ao médico, conforme as permissões atuais da API de pacientes.
+Configure `VITE_API_URL=http://localhost:8000` no frontend. Acesse a tela IA - Detecção com médico ou superusuário. Selecione primeiro um paciente, escolha um JPEG/PNG de até 10 MB e clique em Analisar imagem. A seleção do paciente é obrigatória nas novas análises, para médicos e superusuários. O vínculo fica salvo no exame antes do processamento.
 
 ## Rotas utilizadas
 
-1. `POST /exame_imagem/`: multipart com `file`, `tipo=citologia`, `descricao` opcional e `paciente_id` opcional. Persiste o exame e devolve `exame_id`.
+1. `POST /exame_imagem/`: multipart com `file`, `tipo=citologia`, `descricao` opcional e `paciente_id` obrigatório. Persiste o exame e devolve `exame_id`.
 2. `POST /exame_imagem/{exame_id}/analisar`: envia a tarefa `process_image` ao Celery e devolve `task_id`. Chamadas repetidas reutilizam a tarefa existente. `?reiniciar=true` permite tentar novamente um processamento não concluído.
 3. `GET /exame_imagem/resultado/{task_id}`: retorna PENDING, STARTED, RETRY, FAILURE ou SUCCESS. Em SUCCESS, persiste o resultado no PostgreSQL; consultas repetidas não inserem duplicatas e continuam disponíveis depois da expiração do resultado temporário no Redis.
-4. `GET /exame_imagem/`: últimos 30 exames visíveis, com resultado salvo quando disponível.
+4. `GET /exame_imagem/`: últimos 30 exames visíveis, com resultado salvo quando disponível. Aceita `?paciente_id=ID` para filtrar por paciente e retorna o nome do paciente.
 5. `GET /exame_imagem/uploads/{nome}`: download autenticado da imagem.
 
 As rotas exigem Bearer token. Médicos consultam os próprios exames; superusuários podem consultar todos. Nomes de arquivo são gerados pelo servidor. API e worker compartilham `backend/uploads`.
@@ -79,3 +79,5 @@ A validação mecânica com imagem sintética verifica transporte, inferência e
 Validação realizada em 25/09/2026: 3 testes da API e 7 testes do frontend passaram; `npm run build` passou. No navegador, uma imagem sintética percorreu upload → API → Redis/Celery → modelo → PostgreSQL → gráfico com cinco barras, sem erros JavaScript, e o resultado permaneceu disponível após recarregar. O exame sintético foi removido após a validação.
 
 A checagem TypeScript completa (`npx tsc --noEmit -p tsconfig.app.json`) ainda encontra três erros anteriores em `SecretaryDashboard.tsx` (estado tipado com um nome literal de médica). Eles não pertencem à integração de IA; o build Vite não executa essa checagem.
+
+A ficha do paciente mostra as análises vinculadas e suas probabilidades. O botão Nova análise / consultar histórico abre a tela de IA com esse paciente selecionado. O resultado e o JSON identificam o paciente. Exames antigos sem vínculo continuam consultáveis e são identificados como tal. As permissões existentes foram preservadas: médicos veem suas próprias análises e superusuários veem todas; secretárias não acessam os resultados de IA.

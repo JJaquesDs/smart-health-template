@@ -38,7 +38,7 @@ def create_image_exam(
     file: UploadFile = File(...),
     tipo: str = Form("citologia"),
     descricao: str | None = Form(None),
-    paciente_id: int | None = Form(None),
+    paciente_id: int = Form(...),
     session: Session = Depends(get_session),
     user_atual: Usuario = Depends(access),
 ):
@@ -46,7 +46,7 @@ def create_image_exam(
         raise HTTPException(422, "Este modelo aceita exames de citologia")
     if descricao and len(descricao) > 2000:
         raise HTTPException(422, "Descrição deve ter no máximo 2000 caracteres")
-    if paciente_id is not None and not session.get(Paciente, paciente_id):
+    if not session.get(Paciente, paciente_id):
         raise HTTPException(404, "Paciente não encontrado")
     exame, upload = create_exam_with_upload(
         session, file, tipo, descricao, user_atual.usuario_id, paciente_id
@@ -61,10 +61,16 @@ def create_image_exam(
 
 
 @router.get("/")
-def history(session: Session = Depends(get_session), user: Usuario = Depends(access)):
+def history(
+    paciente_id: int | None = None,
+    session: Session = Depends(get_session),
+    user: Usuario = Depends(access),
+):
     query = session.query(ExameImagem)
     if user.role != UserRole.SUPERUSER:
         query = query.filter(ExameImagem.usuario_id == user.usuario_id)
+    if paciente_id is not None:
+        query = query.filter(ExameImagem.paciente_id == paciente_id)
     return [
         {
             "exame_id": e.exame_id,
@@ -72,6 +78,7 @@ def history(session: Session = Depends(get_session), user: Usuario = Depends(acc
             "descricao": e.descricao,
             "task_id": e.task_id,
             "paciente_id": e.paciente_id,
+            "paciente_nome": e.paciente.nome if e.paciente else None,
             "arquivo": e.upload_imagem[0].titulo if e.upload_imagem else "",
             "resultado": serialize_result(e.resultados[0]) if e.resultados else None,
         }

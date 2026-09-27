@@ -23,6 +23,8 @@ class ExameImagem(Base):
         Integer, ForeignKey("pacientes.paciente_id", ondelete="SET NULL"), nullable=True
     )
 
+    paciente = relationship("Paciente")
+
     medicamento = relationship(
         "Medicamento", back_populates="exame_imagem"
     )  #  Para médicos se relacionarem com exames de imagem
